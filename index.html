@@ -3,7 +3,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-		<link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<link rel="icon" type="image/x-icon" href="favicon.ico" />
 		<title>Unblocker!</title>
 		<style type="text/css">
 * {
@@ -30,11 +31,24 @@ body {
 	top: 0px;
 	right: 0px;
 	bottom: 0px;
+	color: #000000;
+	background-color: #ffffff;
 }
 
 #noscript-screen {
 	padding: 10px;
 	box-sizing: border-box;
+}
+
+#container {
+	position: absolute;
+	display: block;
+	width: 512px;
+	height: 384px;
+	left: 50%;
+	top: 50%;
+	margin-left: -256px;
+	margin-top: -192px;
 }
 
 #title {
@@ -43,63 +57,80 @@ body {
 	width: fit-content;
 	height: fit-content;
 	margin: auto;
-	padding: 20px;
+	margin-bottom: 20px;
 	white-space: pre;
-}
-
-#input-bar {
-	position: relative;
-	display: flex;
-	width: fit-content;
-	height: fit-content;
-	margin: auto;
-	padding: 10px;
+	font-size: 12px;
+	font-style: normal;
+	line-height: 12px;
 }
 
 #input {
 	position: relative;
 	display: block;
-	width: 200px;
-	height: auto;
-	padding: 10px;
+	width: calc(100% - 52px);
+	height: 25px;
 	outline: none;
-	margin-right: 10px;
-	font-size: 14px;
+	margin-top: 20px;
+	margin-bottom: 20px;
+	padding-top: 10px;
+	padding-bottom: 10px;
+	padding-left: 25px;
+	padding-right: 25px;
+	font-size: 16px;
 	font-weight: 500;
-	font-family: monospace;
 	border-style: solid;
 	border-width: 1px;
-	border-color: #808080;
+	border-color: #b0b0b0;
+	border-radius: 25px;
 }
 
 #input:focus {
-	border-color: #000000;
+	border-color: #808080;
 }
 
-#load {
+#button-bar {
+	position: relative;
+	display: flex;
+	width: fit-content;
+	height: fit-content;
+	margin: auto;
+}
+
+#button-bar div {
 	position: relative;
 	display: block;
 	width: fit-content;
-	height: auto;
+	height: fit-content;
 	padding: 10px;
 	cursor: pointer;
-	font-size: 14px;
-	font-weight: 600;
-	color: #ffffff;
-	background-color: #606060;
+	margin-left: 10px;
+	margin-right: 10px;
+	color: #000000;
+	background-color: #c0c0c0;
+	font-size: 12px;
 	border-style: solid;
 	border-width: 1px;
 	border-top-color: #f0f0f0;
 	border-left-color: #f0f0f0;
 	border-bottom-color: #101010;
-	border-right-color: #101010;
+	border-right-color: #101010;	
 }
 
-#load:active {
+#button-bar div:active {
 	border-top-color: #101010;
 	border-left-color: #101010;
 	border-bottom-color: #f0f0f0;
 	border-right-color: #f0f0f0;
+}
+
+#notice {
+	position: relative;
+	display: block;
+	width: 100%;
+	height: fit-content;
+	margin-top: 15px;
+	font-size: 12px;
+	text-align: center;
 }
 
 #footer {
@@ -120,24 +151,27 @@ body {
 	</head>
 	<body>
 		<div id="main-screen">
-			<div id="title">
+			<div id="container">
+				<div id="title">
  _    _         _      _               _
 | |  | |       | |    | |             | |
 | |  | | _ __  | |__  | |  ___    ___ | | __ ___  _ __
 | |  | || '_ \ | '_ \ | | / _ \  / __|| |/ // _ \| '__|
 | |__| || | | || |_) || || (_) || (__ |   &#60;|  __/| |
  \____/ |_| |_||_.__/ |_| \___/  \___||_|\_\\___||_|
-			</div>
-			<div id="input-bar">
-				<input id="input" type="url" value="https://" placeholder="Content URL" />
-				<div id="load">Load</div>
+				</div>
+				<input id="input" type="text" placeholder="Search or type a URL" />
+				<div id="button-bar">
+					<div id="search-button">Unblocked Search</div>
+					<div id="random-button">I'm Feeling Lucky</div>
+				</div>
+				<div id="notice">Security notice: Your activity on this site will be encrypted through a proxy server.</div>
 			</div>
 		</div>
 		<div id="footer">Created by Ruochen Jia -- <a href="https://github.com/ruochenjia/unblocker/">GitHub Project</a></div>
 		<noscript>
 			<div id="noscript-screen">Please enable JavaScript and refresh this page to continue.</div>
 		</noscript>
-		<script type="text/javascript" src="uv/uv.bundle.js"></script>
 		<script type="text/javascript" src="uv/uv.config.js"></script>
 		<script type="text/javascript">
 "use strict";
@@ -145,13 +179,18 @@ body {
 // <![CDATA[
 (() => {
 
-function checkUrl(url) {
-	try {
-		return new URL(url).href;
-	} catch(err) {
-		return null;
-	}
-}
+window.onerror = (msg, src, lineno, colno, err) => {
+	alert(msg, "Error", "images/error.png");
+};
+
+let urlInput = document.getElementById("input");
+urlInput.onkeydown = (e) => {
+	if (e.keyCode == 13)
+		run(false);
+};
+document.getElementById("search-button").onclick = () => {
+	run(true);
+};
 
 function getQueryString(name, fallback = null, url = window.location.href) {
 	name = name.replace(/[\[\]]/g, '\\$&');
@@ -164,12 +203,21 @@ function getQueryString(name, fallback = null, url = window.location.href) {
 	return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
 
-let urlInput = document.getElementById("input");
-document.getElementById("load").onclick = () => run();
-urlInput.onkeydown = (e) => {
-	if (e.keyCode == 13)
-		run();
-};
+function isUrl(str) {
+	try {
+		let url = new URL(str);
+		return url.href;
+	} catch(err) {
+		return null;
+	}
+}
+
+function isHostname(str = "") {
+	if (/^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^(?:(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){6})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:::(?:(?:(?:[0-9a-fA-F]{1,4})):){5})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:(?:[0-9a-fA-F]{1,4})):){4})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,1}(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:(?:[0-9a-fA-F]{1,4})):){3})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,2}(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:(?:[0-9a-fA-F]{1,4})):){2})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,3}(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:[0-9a-fA-F]{1,4})):)(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,4}(?:(?:[0-9a-fA-F]{1,4})))?::)(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,5}(?:(?:[0-9a-fA-F]{1,4})))?::)(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,6}(?:(?:[0-9a-fA-F]{1,4})))?::))))$/.test(str)) {
+		return str.includes(".") || str == "localhost";
+	}
+	return false;
+}
 
 function encodeUrl(url) {
 	let eurl = __uv$config.encodeUrl(url);
@@ -179,18 +227,29 @@ function encodeUrl(url) {
 	return base +  __uv$config.prefix + eurl;
 }
 
-async function run() {
-	let url = checkUrl(urlInput.value);
-	if (url == null) {
-		alert("Please input a valid URL which must start with http:// or https://", "Error");
-		return;
-	}
+function fixUrl(url, searchOnly) {
+	url = url.replace(/^\s+|\s+$/gm, "");
 
-	await window.navigator.serviceWorker.register("./sw.js", {
+	if (searchOnly)
+		return "https://www.google.com/search?q=" + url;
+	if (isUrl(url))
+		return url;
+	if (isHostname(url))
+		return "https://" + url;
+
+	return "https://www.google.com/search?q=" + url;
+}
+
+function run(searchOnly) {
+	let url = fixUrl(urlInput.value, searchOnly);
+
+	window.navigator.serviceWorker.register("./sw.js", {
     	scope:  __uv$config.prefix
+	}).then(() => {
+		window.location = new URL(encodeUrl(url));
+	}).catch((err) => {	
+		console.warn(err);
 	});
-
-	window.location = new URL(encodeUrl(url));
 }
 
 })();
