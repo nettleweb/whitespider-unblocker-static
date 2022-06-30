@@ -210,12 +210,18 @@ window.onerror = (msg, src, lineno, colno, e) => {
 };
 
 let urlInput = document.getElementById("input");
+let googleSearch = "https://www.google.com/search?q=";
+let googleSearchR = "https://www.google.com/search?btnI=Im+Feeling+Lucky&q=";
+
 urlInput.onkeydown = (e) => {
 	if (e.keyCode == 13)
-		run(false);
+		run(googleSearch, false);
 };
 document.getElementById("search-button").onclick = () => {
-	run(true);
+	run(googleSearch, true);
+};
+document.getElementById("random-button").onclick = () => {
+	run(googleSearchR, true);
 };
 
 function getQueryString(name, fallback = null, url = window.location.href) {
@@ -238,7 +244,7 @@ function isUrl(str) {
 	}
 }
 
-function isHostname(str = "") {
+function isHostname(str) {
 	let containsSlash = str.includes("/");
 	let host = str;
 	if (containsSlash)
@@ -257,21 +263,21 @@ function encodeUrl(url) {
 	return base +  __uv$config.prefix + eurl;
 }
 
-function fixUrl(url, searchOnly) {
+function fixUrl(url, searchUrl, searchOnly) {
 	url = url.replace(/^\s+|\s+$/gm, "");
 
 	if (searchOnly)
-		return "https://www.google.com/search?q=" + encodeURIComponent(url);
+		return searchUrl + encodeURIComponent(url);
 	if (isUrl(url))
 		return url;
 	if (isHostname(url))
 		return "https://" + url;
 
-	return "https://www.google.com/search?q=" + encodeURIComponent(url);
+	return searchUrl + encodeURIComponent(url);
 }
 
-function run(searchOnly) {
-	let url = fixUrl(urlInput.value, searchOnly);
+function run(searchUrl, searchOnly) {
+	let url = fixUrl(urlInput.value, searchUrl, searchOnly);
 
 	err(""); // remove error message
 
