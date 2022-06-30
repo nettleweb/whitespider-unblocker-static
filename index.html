@@ -133,6 +133,18 @@ body {
 	text-align: center;
 }
 
+#err-msg, #noscript-msg {
+	position: relative;
+	display: block;
+	width: 100%;
+	height: fit-content;
+	margin-top: 15px;
+	color: #ff0000;
+	font-size: 12px;
+	font-weight: 600;
+	text-align: center;
+}
+
 #footer {
 	position: absolute;
 	display: block;
@@ -167,11 +179,14 @@ body {
 				</div>
 				<div class="notice">Security notice: Your activity on this site will be encrypted through a proxy server.</div>
 				<div class="notice">For the best performance, we strongly recommend you to use Google Chrome or a Chromium-based browser.</div>
+				<div id="err-msg"></div>
 			</div>
 		</div>
 		<div id="footer">Created by Ruochen Jia -- <a href="https://github.com/ruochenjia/unblocker/">GitHub Project</a></div>
 		<noscript>
-			<div id="noscript-screen">Please enable JavaScript and refresh this page to continue.</div>
+			<div id="noscript-screen">
+				<div id="noscript-msg">Please enable JavaScript and refresh this page to continue.</div>
+			</div>
 		</noscript>
 		<script type="text/javascript" src="uv/uv.config.js"></script>
 		<script type="text/javascript">
@@ -180,8 +195,18 @@ body {
 // <![CDATA[
 (() => {
 
-window.onerror = (msg, src, lineno, colno, err) => {
-	alert(msg, "Error", "images/error.png");
+// override the default alert function
+function alert(msg, title, icon) {
+	// throw null;
+}
+
+function err(msg) {
+	document.getElementById("err-msg").innerHTML = msg;
+}
+
+// default error handler
+window.onerror = (msg, src, lineno, colno, e) => {
+	err(msg);
 };
 
 let urlInput = document.getElementById("input");
@@ -215,7 +240,7 @@ function isUrl(str) {
 
 function isHostname(str = "") {
 	if (/^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^(?:(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){6})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:::(?:(?:(?:[0-9a-fA-F]{1,4})):){5})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:(?:[0-9a-fA-F]{1,4})):){4})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,1}(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:(?:[0-9a-fA-F]{1,4})):){3})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,2}(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:(?:[0-9a-fA-F]{1,4})):){2})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,3}(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:[0-9a-fA-F]{1,4})):)(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,4}(?:(?:[0-9a-fA-F]{1,4})))?::)(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,5}(?:(?:[0-9a-fA-F]{1,4})))?::)(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,6}(?:(?:[0-9a-fA-F]{1,4})))?::))))$/.test(str)) {
-		return str.includes(".") || str == "localhost";
+		return str.includes(".");
 	}
 	return false;
 }
@@ -244,12 +269,14 @@ function fixUrl(url, searchOnly) {
 function run(searchOnly) {
 	let url = fixUrl(urlInput.value, searchOnly);
 
+	err(""); // remove error message
+
 	window.navigator.serviceWorker.register("./sw.js", {
     	scope:  __uv$config.prefix
 	}).then(() => {
 		window.location = new URL(encodeUrl(url));
-	}).catch((err) => {	
-		console.warn(err);
+	}).catch((e) => {	
+		err(e);
 	});
 }
 
