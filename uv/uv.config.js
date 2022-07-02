@@ -1,6 +1,6 @@
 self.__uv$config = {
-	prefix: "/O0OO00OO0/",
-	bare: "https://vvfsdjlvnjdsss.herokuapp.com/bare/",
+	prefix: "/0OO00O/",
+	bare: "https://incog.dev/bare/",
 	encodeUrl: (url) => encodeURIComponent(url),
 	decodeUrl: (url) => decodeURIComponent(url),
 	handler: '/uv/uv.handler.js',
