@@ -46,7 +46,7 @@ body {
 	width: 512px;
 	height: 384px;
 	left: 50%;
-	top: 50%;
+	top: 40%;
 	margin-left: -256px;
 	margin-top: -192px;
 }
@@ -123,6 +123,53 @@ body {
 	border-right-color: #f0f0f0;
 }
 
+#shortcut-bar {
+	position: relative;
+	display: grid;
+	width: 100%;
+	height: fit-content;
+	margin-top: 20px;
+	margin-bottom: 20px;
+	column-gap: 10px;
+	row-gap: 10px;
+	grid-template-columns: auto auto auto auto;
+}
+
+.shortcut-item {
+	position: relative;
+	display: block;
+	width: 100px;
+	height: 100px;
+	padding: 10px;
+	cursor: pointer;
+}
+
+.shortcut-item:hover {
+	background-color: #d0d0d0;
+	text-decoration: underline;
+}
+
+.shortcut-item-icon {
+	position: relative;
+	display: block;
+	width: 60px;
+	height: 60px;
+	margin: auto;
+}
+
+.shortcut-item-text {
+	position: relative;
+	display: block;
+	width: 100%;
+	height: 30px;
+	margin-top: 5px;
+	text-align: center;
+	text-overflow: ellipsis; 
+	overflow: hidden;
+	line-height: 14px;
+	font-size: 12px;
+}
+
 .notice {
 	position: relative;
 	display: block;
@@ -187,11 +234,17 @@ body {
 					<div id="search-button">Unblocked Search</div>
 					<div id="random-button">I'm Feeling Lucky</div>
 				</div>
+				<div id="shortcut-bar">
+					<div id="add-shortcut" class="shortcut-item">
+						<img class="shortcut-item-icon" width="60" height="60" src="res/add.svg" />
+						<div class="shortcut-item-text">Add shortcut</div>
+					</div>
+				</div>
 				<div class="notice">Security notice: Your activity on this site will be encrypted through a proxy server.</div>
 				<div class="notice">For the best performance, we strongly recommend you to use Google Chrome or a Chromium-based browser.</div>
 				<div id="err-msg"></div>
 			</div>
-			<img id="settings-button" src="settings.svg" width="24" height="24" />
+			<img id="settings-button" src="res/settings.svg" width="24" height="24" />
 		</div>
 		<div id="footer">Created by Ruochen Jia -- <a href="https://github.com/ruochenjia/unblocker/">GitHub Project</a></div>
 		<noscript>
@@ -220,6 +273,11 @@ window.onerror = (msg, src, lineno, colno, e) => {
 	err(msg);
 };
 
+window.onbeforeunload = window.onunload = (e) => {
+	e.preventDefault();
+	storage.save();
+};
+
 // unregister all services workers before start
 // this can fix certain issues
 window.navigator.serviceWorker.getRegistrations().then((regs) => {
@@ -227,24 +285,97 @@ window.navigator.serviceWorker.getRegistrations().then((regs) => {
 		regs[i].unregister();
 });
 
+let storage = (() => {
+
+function setCookie(key, value, exdays = 30) {
+	let d = new Date();
+	d.setTime(d.getTime() + (exdays * 86400000));
+	let e = "expires=" + d.toUTCString();
+	document.cookie = key + "=" + value + ";" + e + ";path=/";
+}
+
+function getCookie(key) {
+	let n = key + "=";
+	let d = document.cookie.split(';');
+	for (let i = 0; i < d.length; i++) {
+		let c = d[i];
+		while (c.charAt(0) == ' ')
+			c = c.substring(1);
+		if (c.indexOf(n) == 0)
+			return c.substring(n.length, c.length);
+	}
+	return null;
+}
+
+let data = getCookie("data");
+if (data == null)
+	data = "{}";
+
+data = JSON.parse(data);
+data.save = () => {
+	setCookie("data", JSON.stringify(data));
+};
+
+let autosave = () => {
+	data.save();
+	setTimeout(autosave, 10000);
+};
+autosave();
+
+return data;
+
+})();
+
 let urlInput = document.getElementById("input");
+let shortcutBar = document.getElementById("shortcut-bar");
+let addShortcutButton = document.getElementById("add-shortcut");
 let googleSearch = "https://www.google.com/search?q=";
 let googleSearchR = "https://www.google.com/search?btnI=Im+Feeling+Lucky&q=";
-let uvConfig = {
-	prefix: (() => {
-		let len = Math.round(Math.random() * 10);
-		let O = Math.random() > 0.5 ? "O" /*U+004f*/ : "О" /*U+041e*/;
-		let str = "";
-		for (let i = 0; i < len; i++)
-			str += Math.random() > 0.5 ? O : "0";
-		return "/" + str + "/";
-	})(),
-	bare: "https://incog.dev/bare/",
-	handler: "/uv/uv.handler.js",
-	bundle: "/uv/uv.bundle.js",
-	config: "/uv/uv.config.js",
-	sw: "/uv/uv.sw.js",
-};
+
+// set shortcuts
+let shortcuts = storage.shortcuts;
+if (shortcuts == null)
+	storage.shortcuts = shortcuts = [
+		{
+			name: "Google",
+			icon: "res/google.svg",
+			link: "https://www.google.com/"
+		},
+		{
+			name: "YouTube",
+			icon: "res/youtube.svg",
+			link: "https://www.youtube.com/"
+		},
+		{
+			name: "TikTok",
+			icon: "res/tiktok.svg",
+			link: "https://www.tiktok.com/"
+		}
+	];
+
+function updateShortcuts() {
+	shortcutBar.innerHTML = "";
+	for (let i = 0; i < shortcuts.length; i++) {
+		let s = shortcuts[i];
+		let item = document.createElement("div");
+		item.className = "shortcut-item";
+		let icon = document.createElement("img");
+		icon.className = "shortcut-item-icon";
+		icon.width = 60;
+		icon.height = 60;
+		icon.src = s.icon;
+		item.appendChild(icon);
+		let text = document.createElement("text");
+		text.className = "shortcut-item-text";
+		text.innerHTML = s.name;
+		item.appendChild(text);
+		item.onclick = () => openUrl(s.link);
+		shortcutBar.appendChild(item);
+	}
+	shortcutBar.appendChild(addShortcutButton);
+}
+updateShortcuts();
+
 
 urlInput.onkeydown = (e) => {
 	if (e.keyCode == 13)
@@ -255,6 +386,36 @@ document.getElementById("search-button").onclick = () => {
 };
 document.getElementById("random-button").onclick = () => {
 	run(googleSearchR, true);
+};
+addShortcutButton.onclick = () => {
+	err(""); // remove error message
+	let name = prompt("Name");
+	let url = prompt("URL");
+	if (name == null || name.length == 0) {
+		err("Please input a name");
+		return;
+	}
+	if (url == null || url.length == 0) {
+		err("Please input a URL");
+		return;
+	}
+	try {
+		url = new URL(url).href;
+	} catch(err) {
+		err("Please input a valid URL that must start with http:// or https://");
+		return;
+	}
+	shortcuts.push({
+		name: name,
+		icon: (() => {
+			let favicon = new URL(url);
+			favicon.pathname = "/favicon.ico";
+			return favicon.href;
+		})(),
+		link: url
+	});
+	storage.shortcuts = shortcuts;
+	updateShortcuts();
 };
 
 function isUrl(str) {
@@ -282,7 +443,7 @@ function encodeUrl(url) {
 	let base = new URL(window.location.href);
 	base.pathname = "/";
 	base = base.href.slice(0, -1);
-	return base +  uvConfig.prefix + eurl;
+	return base +  __uv$config.prefix + eurl;
 }
 
 function fixUrl(url, searchUrl, searchOnly) {
@@ -298,24 +459,20 @@ function fixUrl(url, searchUrl, searchOnly) {
 	return searchUrl + encodeURIComponent(url);
 }
 
-function swUrl() {
-	let cfgstr = encodeURIComponent(JSON.stringify(uvConfig));
-	let baseUrl = "/sw.js";
-	return baseUrl + "?config=" + cfgstr;
-}
-
-function run(searchUrl, searchOnly) {
-	let url = fixUrl(urlInput.value, searchUrl, searchOnly);
-
-	err(""); // remove error message
-
-	window.navigator.serviceWorker.register(swUrl(), {
-		scope:  uvConfig.prefix
+function openUrl(url) {
+	window.navigator.serviceWorker.register("/sw.js", {
+		scope:  __uv$config.prefix
 	}).then(() => {
 		window.location = new URL(encodeUrl(url));
 	}).catch((e) => {	
 		err(e);
 	});
+}
+
+function run(searchUrl, searchOnly) {
+	let url = fixUrl(urlInput.value, searchUrl, searchOnly);
+	err(""); // remove error message
+	openUrl(url);
 }
 
 })();
