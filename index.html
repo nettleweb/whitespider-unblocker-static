@@ -145,6 +145,16 @@ body {
 	text-align: center;
 }
 
+#settings-button {
+	position: absolute;
+	display: block;
+	width: 24px;
+	height: 24px;
+	top: 20px;
+	right: 20px;
+	cursor: pointer;
+}
+
 #footer {
 	position: absolute;
 	display: block;
@@ -181,6 +191,7 @@ body {
 				<div class="notice">For the best performance, we strongly recommend you to use Google Chrome or a Chromium-based browser.</div>
 				<div id="err-msg"></div>
 			</div>
+			<img id="settings-button" src="settings.svg" width="24" height="24" />
 		</div>
 		<div id="footer">Created by Ruochen Jia -- <a href="https://github.com/ruochenjia/unblocker/">GitHub Project</a></div>
 		<noscript>
@@ -209,9 +220,31 @@ window.onerror = (msg, src, lineno, colno, e) => {
 	err(msg);
 };
 
+// unregister all services workers before start
+// this can fix certain issues
+window.navigator.serviceWorker.getRegistrations().then((regs) => {
+	for (let i = 0; i < regs.length; i++)
+		regs[i].unregister();
+});
+
 let urlInput = document.getElementById("input");
 let googleSearch = "https://www.google.com/search?q=";
 let googleSearchR = "https://www.google.com/search?btnI=Im+Feeling+Lucky&q=";
+let uvConfig = {
+	prefix: (() => {
+		let len = Math.round(Math.random() * 10);
+		let O = Math.random() > 0.5 ? "O" /*U+004f*/ : "О" /*U+041e*/;
+		let str = "";
+		for (let i = 0; i < len; i++)
+			str += Math.random() > 0.5 ? O : "0";
+		return "/" + str + "/";
+	})(),
+	bare: "https://incog.dev/bare/",
+	handler: "/uv/uv.handler.js",
+	bundle: "/uv/uv.bundle.js",
+	config: "/uv/uv.config.js",
+	sw: "/uv/uv.sw.js",
+};
 
 urlInput.onkeydown = (e) => {
 	if (e.keyCode == 13)
@@ -223,17 +256,6 @@ document.getElementById("search-button").onclick = () => {
 document.getElementById("random-button").onclick = () => {
 	run(googleSearchR, true);
 };
-
-function getQueryString(name, fallback = null, url = window.location.href) {
-	name = name.replace(/[\[\]]/g, '\\$&');
-	let regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
-	let results = regex.exec(url);
-	if (results == null)
-		return fallback;
-	if (results[2] == null)
-		return "";
-	return decodeURIComponent(results[2].replace(/\+/g, ' '));
-}
 
 function isUrl(str) {
 	try {
@@ -260,7 +282,7 @@ function encodeUrl(url) {
 	let base = new URL(window.location.href);
 	base.pathname = "/";
 	base = base.href.slice(0, -1);
-	return base +  __uv$config.prefix + eurl;
+	return base +  uvConfig.prefix + eurl;
 }
 
 function fixUrl(url, searchUrl, searchOnly) {
@@ -276,13 +298,19 @@ function fixUrl(url, searchUrl, searchOnly) {
 	return searchUrl + encodeURIComponent(url);
 }
 
+function swUrl() {
+	let cfgstr = encodeURIComponent(JSON.stringify(uvConfig));
+	let baseUrl = "/sw.js";
+	return baseUrl + "?config=" + cfgstr;
+}
+
 function run(searchUrl, searchOnly) {
 	let url = fixUrl(urlInput.value, searchUrl, searchOnly);
 
 	err(""); // remove error message
 
-	window.navigator.serviceWorker.register("./sw.js", {
-    	scope:  __uv$config.prefix
+	window.navigator.serviceWorker.register(swUrl(), {
+		scope:  uvConfig.prefix
 	}).then(() => {
 		window.location = new URL(encodeUrl(url));
 	}).catch((e) => {	
