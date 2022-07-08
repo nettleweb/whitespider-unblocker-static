@@ -20,6 +20,7 @@ body {
 	font-size: 14px;
 	font-family: monospace;
 	font-weight: 500;
+	font-style: normal;
 	overflow-x: hidden;
 }
 
@@ -202,6 +203,74 @@ body {
 	cursor: pointer;
 }
 
+#settings-menu {
+	position: absolute;
+	width: 180px;
+	height: 360px;
+	top: 0px;
+	right: 0px;
+	padding: 10px;
+	background-color: #f8f8f8;
+	border-style: solid;
+	border-width: 1px;
+	border-color: #808080;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+#settings-title {
+	position: relative;
+	width: 100%;
+	height: 25px;
+	line-height: 25px;
+	font-size: 14px;
+	font-weight: 600;
+	text-align: center;
+}
+
+.settings-text, .settings-input {
+	position: relative;
+	width: 100%;
+	height: 16px;
+	line-height: 16px;
+	font-size: 14px;
+	font-style: normal;
+	text-align: start;
+}
+
+.settings-input {
+	outline: none;
+	border-style: solid;
+	border-width: 1px;
+	border-color: #808080;
+}
+
+.settings-input:focus {
+	border-color: #000000;
+}
+
+#context-menu, #shortcut-context-menu {
+	position: relative;
+	width: fit-content;
+	height: fit-content;
+	border-style: solid;
+	border-width: 1px;
+	border-color: #808080;
+	background-color: #f8f8f8;
+}
+
+.context-menu-option {
+	position: relative;
+	width: auto;
+	height: fit-content;
+	padding: 5px;
+	cursor: pointer;
+}
+
+.context-menu-option:hover {
+	background-color: #808080;
+}
+
 #footer {
 	position: absolute;
 	display: block;
@@ -245,6 +314,17 @@ body {
 				<div id="err-msg"></div>
 			</div>
 			<img id="settings-button" src="res/settings.svg" width="24" height="24" />
+			<div id="settings-menu" style="display: none;">
+				<div id="settings-title">Settings</div>
+				<div class="settings-text">Proxy server address:</div>
+				<input class="settings-input" type="url" value="" placeholder="https://www.example.com/" />
+				
+			</div>
+			<div id="context-menu" style="display: none;"></div>
+			<div id="shortcut-context-menu" style="display: none;">
+				<div id="edit-shortcut" class="context-menu-option">Edit</div>
+				<div id="delete-shortcut" class="context-menu-option">Delete</div>
+			</div>
 		</div>
 		<div id="footer">Created by Ruochen Jia -- <a href="https://github.com/ruochenjia/unblocker/">GitHub Project</a></div>
 		<noscript>
@@ -283,7 +363,23 @@ window.onbeforeunload = window.onunload = (e) => {
 window.navigator.serviceWorker.getRegistrations().then((regs) => {
 	for (let i = 0; i < regs.length; i++)
 		regs[i].unregister();
+}).catch((e) => {
+	err(e);
 });
+
+// check window state
+if (window != window.top) {
+	// prevent this page running inside a frame
+	// as service workers may not work properly
+	document.body.innerHTML = "Running this page inside a frame is not supported.";
+}
+
+Array.prototype.remove = function(element) {
+	for (let i = 0; i < this.length; i++) {
+		if (this[i] == element)
+			this.splice(i, 1);
+	}
+};
 
 let storage = (() => {
 
@@ -329,6 +425,9 @@ return data;
 let urlInput = document.getElementById("input");
 let shortcutBar = document.getElementById("shortcut-bar");
 let addShortcutButton = document.getElementById("add-shortcut");
+let settingsMenu = document.getElementById("settings-menu");
+let contextMenu = document.getElementById("context-menu");
+let shortcutContextMenu = document.getElementById("shortcut-context-menu");
 let googleSearch = "https://www.google.com/search?q=";
 let googleSearchR = "https://www.google.com/search?btnI=Im+Feeling+Lucky&q=";
 
@@ -347,9 +446,24 @@ if (shortcuts == null)
 			link: "https://www.youtube.com/"
 		},
 		{
+			name: "Facebook",
+			icon: "https://www.facebook.com/favicon.ico",
+			link: "https://www.facebook.com"
+		},
+		{
+			name: "Instagram",
+			icon: "https://www.instagram.com/favicon.ico",
+			link: "https://www.instagram.com"
+		},
+		{
 			name: "TikTok",
 			icon: "res/tiktok.svg",
 			link: "https://www.tiktok.com/"
+		},
+		{
+			name: "Y8",
+			icon: "https://www.y8.com/favicon.ico",
+			link: "https://www.y8.com"
 		}
 	];
 
@@ -359,17 +473,35 @@ function updateShortcuts() {
 		let s = shortcuts[i];
 		let item = document.createElement("div");
 		item.className = "shortcut-item";
+		item.onclick = () => openUrl(s.link);
+		item.oncontextmenu = (e) => {
+			e.preventDefault();
+			shortcutContextMenu.style.top = e.clientY + "px";
+			shortcutContextMenu.style.left = e.clientX + "px";
+			shortcutContextMenu.style.display = "block";
+			document.getElementById("delete-shortcut").onclick = () => {
+				shortcuts.remove(s);
+				storage.shortcuts = shortcuts;
+				shortcutContextMenu.style.display = "none";
+				updateShortcuts();
+			};
+			document.getElementById("edit-shortcut").onclick = () => {
+				shortcutContextMenu.style.display = "none";
+			};
+		};
+
 		let icon = document.createElement("img");
 		icon.className = "shortcut-item-icon";
 		icon.width = 60;
 		icon.height = 60;
 		icon.src = s.icon;
 		item.appendChild(icon);
+
 		let text = document.createElement("text");
 		text.className = "shortcut-item-text";
 		text.innerHTML = s.name;
+
 		item.appendChild(text);
-		item.onclick = () => openUrl(s.link);
 		shortcutBar.appendChild(item);
 	}
 	shortcutBar.appendChild(addShortcutButton);
@@ -389,22 +521,30 @@ document.getElementById("random-button").onclick = () => {
 };
 addShortcutButton.onclick = () => {
 	err(""); // remove error message
+
 	let name = prompt("Name");
-	let url = prompt("URL");
-	if (name == null || name.length == 0) {
+	if (name == null)
+		return;
+	if (name.length == 0) {
 		err("Please input a name");
 		return;
 	}
-	if (url == null || url.length == 0) {
+
+	let url = prompt("URL");
+	if (url == null)
+		return;
+	if (url.length == 0) {
 		err("Please input a URL");
 		return;
 	}
+
 	try {
 		url = new URL(url).href;
-	} catch(err) {
+	} catch(e) {
 		err("Please input a valid URL that must start with http:// or https://");
 		return;
 	}
+
 	shortcuts.push({
 		name: name,
 		icon: (() => {
@@ -417,6 +557,20 @@ addShortcutButton.onclick = () => {
 	storage.shortcuts = shortcuts;
 	updateShortcuts();
 };
+document.getElementById("settings-button").oncontextmenu = (e) => {
+	e.preventDefault();
+	settingsMenu.style.display = "block";
+};
+
+document.body.onclick = (e) => {
+	let elem = e.target;
+	if (elem != settingsMenu && !settingsMenu.contains(elem))
+		settingsMenu.style.display = "none";
+	if (elem != contextMenu && !contextMenu.contains(elem))
+		contextMenu.style.display = "none";
+	if (elem != shortcutContextMenu && !shortcutContextMenu.contains(elem))
+		shortcutContextMenu.style.display = "none";
+}
 
 function isUrl(str) {
 	try {
