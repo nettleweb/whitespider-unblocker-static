@@ -320,7 +320,9 @@ body {
 				<input class="settings-input" type="url" value="" placeholder="https://www.example.com/" />
 				
 			</div>
-			<div id="context-menu" style="display: none;"></div>
+			<div id="context-menu" style="display: none;">
+				<div id="clear-data" class="context-menu-option">Wipe site data</div>
+			</div>
 			<div id="shortcut-context-menu" style="display: none;">
 				<div id="edit-shortcut" class="context-menu-option">Edit</div>
 				<div id="delete-shortcut" class="context-menu-option">Delete</div>
@@ -383,34 +385,12 @@ Array.prototype.remove = function(element) {
 
 let storage = (() => {
 
-function setCookie(key, value, exdays = 30) {
-	let d = new Date();
-	d.setTime(d.getTime() + (exdays * 86400000));
-	let e = "expires=" + d.toUTCString();
-	document.cookie = key + "=" + value + ";" + e + ";path=/";
-}
-
-function getCookie(key) {
-	let n = key + "=";
-	let d = document.cookie.split(';');
-	for (let i = 0; i < d.length; i++) {
-		let c = d[i];
-		while (c.charAt(0) == ' ')
-			c = c.substring(1);
-		if (c.indexOf(n) == 0)
-			return c.substring(n.length, c.length);
-	}
-	return null;
-}
-
-let data = getCookie("data");
+let data = window.localStorage.getItem("data");
 if (data == null)
 	data = "{}";
 
 data = JSON.parse(data);
-data.save = () => {
-	setCookie("data", JSON.stringify(data));
-};
+data.save = () => window.localStorage.setItem("data", JSON.stringify(data));
 
 let autosave = () => {
 	data.save();
@@ -476,6 +456,7 @@ function updateShortcuts() {
 		item.onclick = () => openUrl(s.link);
 		item.oncontextmenu = (e) => {
 			e.preventDefault();
+			e.stopPropagation();
 			shortcutContextMenu.style.top = e.clientY + "px";
 			shortcutContextMenu.style.left = e.clientX + "px";
 			shortcutContextMenu.style.display = "block";
@@ -507,7 +488,6 @@ function updateShortcuts() {
 	shortcutBar.appendChild(addShortcutButton);
 }
 updateShortcuts();
-
 
 urlInput.onkeydown = (e) => {
 	if (e.keyCode == 13)
@@ -557,8 +537,17 @@ addShortcutButton.onclick = () => {
 	storage.shortcuts = shortcuts;
 	updateShortcuts();
 };
-document.getElementById("settings-button").oncontextmenu = (e) => {
-	e.preventDefault();
+document.getElementById("clear-data").onclick = () => {
+	contextMenu.style.display = "none";	
+	window.sessionStorage.clear();
+	window.localStorage.clear();
+	window.caches.keys().then((keys) => {
+		for (let i = 0; i < keys.length; i++)
+			caches.delete(keys[i]);
+	});
+};
+document.getElementById("settings-button").onclick = (e) => {
+	e.stopPropagation();
 	settingsMenu.style.display = "block";
 };
 
@@ -570,7 +559,13 @@ document.body.onclick = (e) => {
 		contextMenu.style.display = "none";
 	if (elem != shortcutContextMenu && !shortcutContextMenu.contains(elem))
 		shortcutContextMenu.style.display = "none";
-}
+};
+document.oncontextmenu = (e) => {
+	e.preventDefault();
+	contextMenu.style.top = e.clientY + "px";
+	contextMenu.style.left = e.clientX + "px";
+	contextMenu.style.display = "block";
+};
 
 function isUrl(str) {
 	try {
