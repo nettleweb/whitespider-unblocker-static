@@ -203,6 +203,21 @@ body {
 	cursor: pointer;
 }
 
+#footer {
+	position: absolute;
+	display: block;
+	width: 100%;
+	height: 30px;
+	bottom: 0px;
+	line-height: 30px;
+	font-size: 12px;
+	font-family: monospace;
+	font-weight: 500;
+	text-align: center;
+	color: #808080;
+	background-color: #f0f0f0;
+}
+
 #settings-menu {
 	position: absolute;
 	width: 180px;
@@ -270,21 +285,6 @@ body {
 .context-menu-option:hover {
 	background-color: #808080;
 }
-
-#footer {
-	position: absolute;
-	display: block;
-	width: 100%;
-	height: 30px;
-	bottom: 0px;
-	line-height: 30px;
-	font-size: 12px;
-	font-family: monospace;
-	font-weight: 500;
-	text-align: center;
-	color: #808080;
-	background-color: #f0f0f0;
-}
 		</style>
 	</head>
 	<body>
@@ -314,6 +314,7 @@ body {
 				<div id="err-msg"></div>
 			</div>
 			<img id="settings-button" src="res/settings.svg" width="24" height="24" />
+			<div id="footer">Created by Ruochen Jia -- <a href="https://github.com/ruochenjia/unblocker/">GitHub Project</a></div>
 			<div id="settings-menu" style="display: none;">
 				<div id="settings-title">Settings</div>
 				<div class="settings-text">Proxy server address:</div>
@@ -328,7 +329,6 @@ body {
 				<div id="delete-shortcut" class="context-menu-option">Delete</div>
 			</div>
 		</div>
-		<div id="footer">Created by Ruochen Jia -- <a href="https://github.com/ruochenjia/unblocker/">GitHub Project</a></div>
 		<noscript>
 			<div id="noscript-screen">
 				<div id="noscript-msg">Please enable JavaScript and refresh this page to continue.</div>
