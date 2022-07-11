@@ -363,15 +363,6 @@ window.onbeforeunload = window.onunload = (e) => {
 	storage.save();
 };
 
-// unregister all services workers before start
-// this can fix certain issues
-window.navigator.serviceWorker.getRegistrations().then((regs) => {
-	for (let i = 0; i < regs.length; i++)
-		regs[i].unregister();
-}).catch((e) => {
-	err(e);
-});
-
 // check window state
 if (window != window.top) {
 	// prevent this page running inside a frame
@@ -611,20 +602,24 @@ function fixUrl(url, searchUrl, searchOnly) {
 	return searchUrl + encodeURIComponent(url);
 }
 
-function openUrl(url) {
-	window.navigator.serviceWorker.register("/sw.js", {
+async function openUrl(url) {
+	let regs = await window.navigator.serviceWorker.getRegistrations();
+	for (let i = 0; i < regs.length; i++)
+		await regs[i].unregister();
+
+	await window.navigator.serviceWorker.register("/sw.js", {
 		scope:  __uv$config.prefix
-	}).then(() => {
-		window.location = new URL(encodeUrl(url));
-	}).catch((e) => {	
-		err(e);
 	});
+
+	window.location = new URL(encodeUrl(url));
 }
 
 function run(searchUrl, searchOnly) {
 	let url = fixUrl(urlInput.value, searchUrl, searchOnly);
 	err(""); // remove error message
-	openUrl(url);
+	openUrl(url).catch((e) => {
+		err(e);
+	});
 }
 
 })();
