@@ -500,13 +500,13 @@ function updateShortcuts() {
 updateShortcuts();
 
 let __uv$config = {
-    prefix: "/OO0OO0O/",
-    bare: "https://incog.dev/bare/",
-    encodeUrl: (url) => encodeURIComponent(url),
-    decodeUrl: (url) => decodeURIComponent(url),
-    handler: "/uv.handler.js",
-    bundle: "/uv.bundle.js",
-    sw: "/uv.sw.js"
+	prefix: "/OO0OO0O/",
+	bare: "https://incog.dev/bare/",
+	encodeUrl: (url) => encodeURIComponent(url),
+	decodeUrl: (url) => decodeURIComponent(url),
+	handler: "/uv/uv.handler.js",
+	bundle: "/uv/uv.bundle.js",
+	sw: "/uv/uv.sw.js"
 };
 
 urlInput.onkeydown = (e) => {
@@ -622,8 +622,17 @@ function encodeUrl(url) {
 	return base +  __uv$config.prefix + eurl;
 }
 
+function encodeConfig() {
+	return encodeURIComponent(JSON.stringify(__uv$config));
+}
+
 function encodeSwUrl() {
-	return "/sw.js?config=" + encodeURIComponent(JSON.stringify(__uv$config));
+	let url = new URL(window.location.href);
+	url.pathname = "/sw.js";
+	url.search = "";
+	url = url.href;
+	__uv$config.config = url + "?config=" + encodeConfig() + "&mode=get";
+	return url + "?config=" + encodeConfig();
 }
 
 function fixUrl(url, searchUrl, searchOnly) {
