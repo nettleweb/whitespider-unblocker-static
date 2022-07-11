@@ -27,7 +27,7 @@ body {
 	overflow-x: hidden;
 }
 
-#main-screen, #noscript-screen {
+#main-screen, #noscript-screen, #frame-screen {
 	position: absolute;
 	width: 100%;
 	height: 100%;
@@ -42,6 +42,14 @@ body {
 #noscript-screen {
 	padding: 10px;
 	box-sizing: border-box;
+}
+
+#frame {
+	position: absolute;
+	display: block;
+	width: 100%;
+	height: 100%;
+	border: none;
 }
 
 #container {
@@ -66,6 +74,7 @@ body {
 	font-size: 12px;
 	font-style: normal;
 	line-height: 12px;
+	user-select: none;
 }
 
 #input {
@@ -112,12 +121,14 @@ body {
 	color: #000000;
 	background-color: #c0c0c0;
 	font-size: 12px;
+	user-select: none;
 	border-style: solid;
 	border-width: 1px;
+	border-radius: 25px;
 	border-top-color: #f0f0f0;
 	border-left-color: #f0f0f0;
 	border-bottom-color: #101010;
-	border-right-color: #101010;	
+	border-right-color: #101010;
 }
 
 #button-bar div:active {
@@ -172,16 +183,6 @@ body {
 	overflow: hidden;
 	line-height: 14px;
 	font-size: 12px;
-}
-
-.notice {
-	position: relative;
-	display: block;
-	width: 100%;
-	height: fit-content;
-	margin-top: 15px;
-	font-size: 12px;
-	text-align: center;
 }
 
 #err-msg, #noscript-msg {
@@ -246,14 +247,15 @@ body {
 	text-align: center;
 }
 
-.settings-text, .settings-input {
+.text, #settings-menu input, #settings-menu label {
 	position: relative;
+	display: block;
 	width: 100%;
-	height: 16px;
-	line-height: 16px;
+	height: 18px;
+	line-height: 18px;
 	font-size: 14px;
-	font-style: normal;
 	text-align: start;
+	text-decoration: none;
 }
 
 .settings-input {
@@ -312,16 +314,16 @@ body {
 						<div class="shortcut-item-text">Add shortcut</div>
 					</div>
 				</div>
-				<div class="notice">Security notice: Your activity on this site will be encrypted through a proxy server.</div>
-				<div class="notice">For the best performance, we strongly recommend you to use Google Chrome or a Chromium-based browser.</div>
 				<div id="err-msg"></div>
 			</div>
 			<img id="settings-button" src="res/settings.svg" width="24" height="24" />
 			<div id="footer">Created by Ruochen Jia -- <a href="https://github.com/ruochenjia/unblocker/">GitHub Project</a></div>
 			<div id="settings-menu" style="display: none;">
-				<div id="settings-title">Settings</div>
-				<div class="settings-text">Proxy server address:</div>
-				<input class="settings-input" type="url" value="" placeholder="https://www.example.com/" />
+				<div id="settings-title" style="margin-bottom: 20px;">Settings</div>
+				<div class="text">Proxy server address:</div>
+				<input id="proxy-server" type="url" placeholder="https://incog.dev/bare/" style="margin-bottom: 20px;" />
+				<label for="hide-nav">Hide navigation bar address</label>
+				<input id="hide-nav" type="checkbox" />
 				
 			</div>
 			<div id="context-menu" style="display: none;">
@@ -332,12 +334,14 @@ body {
 				<div id="delete-shortcut" class="context-menu-option">Delete</div>
 			</div>
 		</div>
+		<div id="frame-screen" style="display: none;">
+			<iframe id="frame" width="1024" height="768" allowfullscreen="true" allow=""  sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups" loading="lazy"></iframe>
+		</div>
 		<noscript>
 			<div id="noscript-screen">
 				<div id="noscript-msg">Please enable JavaScript and refresh this page to continue.</div>
 			</div>
 		</noscript>
-		<script type="text/javascript" src="uv.config.js"></script>
 		<script type="text/javascript">
 "use strict";
 
@@ -367,7 +371,7 @@ window.onbeforeunload = window.onunload = (e) => {
 if (window != window.top) {
 	// prevent this page running inside a frame
 	// as service workers may not work properly
-	document.body.innerHTML = "Running this page inside a frame is not supported.";
+	document.body.innerHTML = `Running this page inside a frame is not supported, please click <a href="`+ window.location.href +`" target="_blank">here</a> to continue`;
 }
 
 Array.prototype.remove = function(element) {
@@ -402,10 +406,11 @@ let addShortcutButton = document.getElementById("add-shortcut");
 let settingsMenu = document.getElementById("settings-menu");
 let contextMenu = document.getElementById("context-menu");
 let shortcutContextMenu = document.getElementById("shortcut-context-menu");
+let proxyServer = document.getElementById("proxy-server");
+let hideNav = document.getElementById("hide-nav");
 let googleSearch = "https://www.google.com/search?q=";
 let googleSearchR = "https://www.google.com/search?btnI=Im+Feeling+Lucky&q=";
 
-// set shortcuts
 let shortcuts = storage.shortcuts;
 if (shortcuts == null)
 	storage.shortcuts = shortcuts = [
@@ -440,6 +445,17 @@ if (shortcuts == null)
 			link: "https://www.y8.com"
 		}
 	];
+
+let proxy = storage.proxy;
+if (proxy == null)
+	storage.proxy = proxy = "https://incog.dev/bare";
+
+let enableFrame = storage.enableFrame;
+if (enableFrame == null)
+	storage.enableFrame = enableFrame = false;
+
+proxyServer.value = proxy;
+hideNav.checked = enableFrame;
 
 function updateShortcuts() {
 	shortcutBar.innerHTML = "";
@@ -482,6 +498,16 @@ function updateShortcuts() {
 	shortcutBar.appendChild(addShortcutButton);
 }
 updateShortcuts();
+
+let __uv$config = {
+    prefix: "/OO0OO0O/",
+    bare: "https://incog.dev/bare/",
+    encodeUrl: (url) => encodeURIComponent(url),
+    decodeUrl: (url) => decodeURIComponent(url),
+    handler: "/uv.handler.js",
+    bundle: "/uv.bundle.js",
+    sw: "/uv.sw.js"
+};
 
 urlInput.onkeydown = (e) => {
 	if (e.keyCode == 13)
@@ -560,6 +586,12 @@ document.oncontextmenu = (e) => {
 	contextMenu.style.left = e.clientX + "px";
 	contextMenu.style.display = "block";
 };
+proxyServer.onblur = () => {
+	storage.proxy = proxy = proxyServer.value;
+};
+hideNav.onchange = () => {
+	storage.enableFrame = enableFrame = hideNav.checked;
+};
 
 function isUrl(str) {
 	try {
@@ -585,8 +617,13 @@ function encodeUrl(url) {
 	let eurl = __uv$config.encodeUrl(url);
 	let base = new URL(window.location.href);
 	base.pathname = "/";
+	base.search = "";
 	base = base.href.slice(0, -1);
 	return base +  __uv$config.prefix + eurl;
+}
+
+function encodeSwUrl() {
+	return "/sw.js?config=" + encodeURIComponent(JSON.stringify(__uv$config));
 }
 
 function fixUrl(url, searchUrl, searchOnly) {
@@ -602,24 +639,37 @@ function fixUrl(url, searchUrl, searchOnly) {
 	return searchUrl + encodeURIComponent(url);
 }
 
-async function openUrl(url) {
+async function openUrl(win, url) {
 	let regs = await window.navigator.serviceWorker.getRegistrations();
-	for (let i = 0; i < regs.length; i++)
-		await regs[i].unregister();
+	if (regs.length > 0) {
+		for (let i = 0; i < regs.length; i++)
+			await regs[i].unregister();
 
-	await window.navigator.serviceWorker.register("/sw.js", {
-		scope:  __uv$config.prefix
-	});
+		await openUrl(win, url);
+	} else {
+		let reg = await window.navigator.serviceWorker.register(encodeSwUrl(), { scope:  __uv$config.prefix });
 
-	window.location = new URL(encodeUrl(url));
+		// wait before redirecting to fix certain issues
+		await new Promise(resolve => {	
+			setTimeout(() => resolve(null), 500);
+		});
+		win.location = new URL(encodeUrl(url));
+	}
 }
 
 function run(searchUrl, searchOnly) {
-	let url = fixUrl(urlInput.value, searchUrl, searchOnly);
 	err(""); // remove error message
-	openUrl(url).catch((e) => {
-		err(e);
-	});
+
+	let url = fixUrl(urlInput.value, searchUrl, searchOnly);
+	__uv$config.bare = new URL(proxyServer.value).href;
+
+	if (hideNav.checked) {
+		document.getElementById("main-screen").style.display = "none";
+		document.getElementById("frame-screen").style.display = "block";
+		openUrl(document.getElementById("frame").contentWindow, url);
+	} else {
+		openUrl(window, url);
+	}
 }
 
 })();
