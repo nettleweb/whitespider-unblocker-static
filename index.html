@@ -463,7 +463,7 @@ function updateShortcuts() {
 		let s = shortcuts[i];
 		let item = document.createElement("div");
 		item.className = "shortcut-item";
-		item.onclick = () => openUrl(s.link);
+		item.onclick = () => _openUrl(s.link);
 		item.oncontextmenu = (e) => {
 			e.preventDefault();
 			e.stopPropagation();
@@ -657,12 +657,8 @@ async function openUrl(win, url) {
 	}
 }
 
-function run(searchUrl, searchOnly) {
-	err(""); // remove error message
-
-	let url = fixUrl(urlInput.value, searchUrl, searchOnly);
+function _openUrl(url) {
 	__uv$config.bare = new URL(proxyServer.value).href;
-
 	if (hideNav.checked) {
 		document.getElementById("main-screen").style.display = "none";
 		document.getElementById("frame-screen").style.display = "block";
@@ -670,6 +666,12 @@ function run(searchUrl, searchOnly) {
 	} else {
 		openUrl(window, url);
 	}
+}
+
+function run(searchUrl, searchOnly) {
+	err(""); // remove error message
+	let url = fixUrl(urlInput.value, searchUrl, searchOnly);
+	_openUrl(url);
 }
 
 })();
