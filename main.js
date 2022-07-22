@@ -1,5 +1,6 @@
 "use strict";
 
+(() => {
 function err(msg) {
 	alert(msg, "Error");
 }
@@ -12,13 +13,6 @@ window.onerror = (msg, src, lineno, colno, e) => {
 window.onbeforeunload = window.onunload = (e) => {
 	storage.save();
 };
-
-// check window state
-if (window != window.top) {
-	// prevent this page running inside a frame
-	// as service workers may not work properly
-	document.body.innerHTML = `Running this page inside a frame is not supported, please click <a href="${window.location.href}" target="_blank">here</a> to continue`;
-}
 
 Array.prototype.remove = function(element) {
 	for (let i = 0; i < this.length; i++) {
@@ -47,6 +41,17 @@ let storage = (() => {
 	autosave();
 	return data;
 })();
+
+if(!("serviceWorker" in navigator)) {
+	// service workers are not supported
+	alert("Your browser does not support service workers, please use a supported browser to continue", "Warning");
+	return;
+}
+
+if (window != window.top) {
+	// service workers are very likely to be rejected inside a frame
+	alert(`This page might not function properly while running inside a frame, please click <a href="${window.location.href}" target="_blank">here</a> to open it in a new tab.`, "Warning");
+}
 
 let swReg = window.navigator.serviceWorker.register("/sw.js", {
 	scope: "/",
@@ -294,5 +299,4 @@ function run(searchUrl, searchOnly) {
 	_openUrl(url);
 }
 
-export {}
-export default {}
+})();
