@@ -69,7 +69,7 @@ async function _fetch({ request }) {
 		else {
 			response = await fetch(request);
 			let cache = await caches.open(cacheName);
-			cache.put(request, response);
+			cache.put(request, response.clone());
 			return response;
 		}
 	}
