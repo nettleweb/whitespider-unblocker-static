@@ -49,7 +49,7 @@ if (mode == "get")
 importScripts("/uv/uv.sw.js");
 importScripts("/app.js");
 let sw = new UVServiceWorker(config);
-let cacheName = app.id + "-" + app.version;
+let cacheName =  new URL(location).hostname + app.id + app.version;
 
 async function install() {
 	let cache = await caches.open(cacheName);
