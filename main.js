@@ -18,7 +18,6 @@ if (window != window.top) {
 	// prevent this page running inside a frame
 	// as service workers may not work properly
 	document.body.innerHTML = `Running this page inside a frame is not supported, please click <a href="${window.location.href}" target="_blank">here</a> to continue`;
-	return;
 }
 
 Array.prototype.remove = function(element) {
