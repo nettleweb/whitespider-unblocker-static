@@ -63,11 +63,15 @@ async function _fetch({ request }) {
 	if (request.url.startsWith(self.location.origin + config.prefix)) {
 		return await sw.fetch(request);
 	} else {
-		let cache = await caches.open(cacheName);
-		let response = await cache.match(request);
+		let response = await caches.match(request);
 		if (response != null)
 			return response;
-		else return await fetch(request);
+		else {
+			response = await fetch(request);
+			let cache = await caches.open(cacheName);
+			cache.put(request, response);
+			return response;
+		}
 	}
 }
 
