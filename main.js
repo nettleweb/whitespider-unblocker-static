@@ -80,12 +80,12 @@ if (shortcuts == null)
 		},
 		{
 			name: "Facebook",
-			icon: "https://www.facebook.com/favicon.ico",
+			icon: "res/facebook.svg",
 			link: "https://www.facebook.com"
 		},
 		{
 			name: "Instagram",
-			icon: "https://www.instagram.com/favicon.ico",
+			icon: "res/instagram.svg",
 			link: "https://www.instagram.com"
 		},
 		{
