@@ -189,18 +189,18 @@ body {
 	height: 100px;
 	padding: 10px;
 	cursor: pointer;
+	user-select: none;
 }
 
 .shortcut-item:hover {
-	background-color: #d0d0d0;
-	text-decoration: underline;
+	background-color: #e0e0e0;
 }
 
 .shortcut-item-icon {
 	position: relative;
 	display: block;
-	width: 60px;
-	height: 60px;
+	width: 50px;
+	height: 50px;
 	margin: auto;
 }
 
@@ -209,11 +209,11 @@ body {
 	display: block;
 	width: 100%;
 	height: 30px;
-	margin-top: 5px;
+	margin-top: 20px;
 	text-align: center;
 	text-overflow: ellipsis; 
 	overflow: hidden;
-	line-height: 14px;
+	line-height: 15px;
 	font-size: 12px;
 }
 
@@ -356,6 +356,7 @@ body {
 			</div>
 			<div id="context-menu" style="display: none;">
 				<div id="clear-data" class="context-menu-option">Wipe site data</div>
+				<div id="unregister-sw" class="context-menu-option">Unregister SW</div>
 			</div>
 			<div id="shortcut-context-menu" style="display: none;">
 				<div id="edit-shortcut" class="context-menu-option">Edit</div>
