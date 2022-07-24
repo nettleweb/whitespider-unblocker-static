@@ -53,11 +53,11 @@ if (window != window.top) {
 	alert(`This page might not function properly while running inside a frame, please click <a href="${window.location.href}" target="_blank">here</a> to open it in a new tab.`, "Warning");
 }
 
-// let swReg = window.navigator.serviceWorker.register("/sw.js", {
-// 	scope: "/",
-// 	type: "classic",
-// 	updateViaCache: "all"
-// });
+let swReg = window.navigator.serviceWorker.register("/sw.js", {
+	scope: "/",
+	type: "classic",
+	updateViaCache: "all"
+});
 
 let urlInput = document.getElementById("input");
 let shortcutBar = document.getElementById("shortcut-bar");
