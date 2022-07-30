@@ -4,15 +4,30 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 		<meta http-equiv="Referrer-Policy" content="no-referrer" />
+		<meta name="referrer" content="no-referrer" />
 		<meta name="robots" content="noindex,nofollow" />
-		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1" />
 		<base href="/" />
 		<link rel="icon" type="image/x-icon" href="favicon.ico" />
-		<title>Unblocker!</title>
+		<link rel="manifest" type="text/plain" href="manifest.json" />
+		<title>WhiteSpider Site Unblocker</title>
+		<script type="text/javascript" src="https://webalert.pages.dev/webalert.js"></script>
 		<style type="text/css">
 * {
 	margin: 0px;
 	padding: 0px;
+}
+
+@font-face {
+	font-family: "Ubuntu";
+	font-style: normal;
+	src: url("res/ubuntu.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "Ubuntu Mono";
+	font-style: normal;
+	src: url("res/ubuntu-mono.ttf") format("truetype");
 }
 
 body {
@@ -20,14 +35,14 @@ body {
 	display: block;
 	width: 100%;
 	height: 100%;
+	overflow-x: hidden;
+	font-family: "Ubuntu";
 	font-size: 14px;
-	font-family: monospace;
 	font-weight: 500;
 	font-style: normal;
-	overflow-x: hidden;
 }
 
-#main-screen, #noscript-screen, #frame-screen {
+#main-screen, #noscript-screen {
 	position: absolute;
 	width: 100%;
 	height: 100%;
@@ -35,7 +50,7 @@ body {
 	top: 0px;
 	right: 0px;
 	bottom: 0px;
-	color: #000000;
+	color: #303030;
 	background-color: #ffffff;
 }
 
@@ -44,53 +59,61 @@ body {
 	box-sizing: border-box;
 }
 
-#frame {
-	position: absolute;
-	display: block;
-	width: 100%;
-	height: 100%;
-	border: none;
-}
-
-#container {
-	position: absolute;
-	display: block;
-	width: 512px;
-	height: 384px;
-	left: 50%;
-	top: 40%;
-	margin-left: -256px;
-	margin-top: -192px;
-}
-
-#title {
+#logo {
 	position: relative;
 	display: block;
 	width: fit-content;
 	height: fit-content;
-	margin: auto;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 100px;
 	margin-bottom: 20px;
-	white-space: pre;
-	font-size: 12px;
-	font-style: normal;
-	line-height: 12px;
+	user-select: none;
+}
+
+
+#logo-ws {
+	position: relative;
+	display: block;
+	width: 512px;
+	height: 128px;
+	background-image: url("res/logo.svg");
+	background-repeat: no-repeat;
+	background-size: contain;
+}
+
+#logo-text {
+	position: relative;
+	display: block;
+	width: 384px;
+	height: fit-content;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 10px;
+	color: #808080;
+	font-size: 18px;
+	font-style: italic;
+	font-weight: 600;
+	text-align: end;
+	text-decoration: none;
 	user-select: none;
 }
 
 #input {
 	position: relative;
 	display: block;
-	width: calc(100% - 52px);
+	width: 50%;
 	height: 25px;
-	outline: none;
-	margin-top: 20px;
-	margin-bottom: 20px;
+	margin: auto;
 	padding-top: 10px;
 	padding-bottom: 10px;
 	padding-left: 25px;
 	padding-right: 25px;
+	outline: none;
 	font-size: 16px;
-	font-weight: 500;
+	font-weight: inherit;
+	font-family: inherit;
+	font-style: inherit;
 	border-style: solid;
 	border-width: 1px;
 	border-color: #b0b0b0;
@@ -106,7 +129,10 @@ body {
 	display: flex;
 	width: fit-content;
 	height: fit-content;
-	margin: auto;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 20px;
+	margin-bottom: 20px;
 }
 
 #button-bar div {
@@ -141,10 +167,9 @@ body {
 #shortcut-bar {
 	position: relative;
 	display: grid;
-	width: 100%;
+	width: fit-content;
 	height: fit-content;
-	margin-top: 20px;
-	margin-bottom: 20px;
+	margin: auto;
 	column-gap: 10px;
 	row-gap: 10px;
 	grid-template-columns: auto auto auto auto;
@@ -157,18 +182,18 @@ body {
 	height: 100px;
 	padding: 10px;
 	cursor: pointer;
+	user-select: none;
 }
 
 .shortcut-item:hover {
-	background-color: #d0d0d0;
-	text-decoration: underline;
+	background-color: #e0e0e0;
 }
 
 .shortcut-item-icon {
 	position: relative;
 	display: block;
-	width: 60px;
-	height: 60px;
+	width: 50px;
+	height: 50px;
 	margin: auto;
 }
 
@@ -177,11 +202,11 @@ body {
 	display: block;
 	width: 100%;
 	height: 30px;
-	margin-top: 5px;
+	margin-top: 20px;
 	text-align: center;
 	text-overflow: ellipsis; 
 	overflow: hidden;
-	line-height: 14px;
+	line-height: 15px;
 	font-size: 12px;
 }
 
@@ -197,54 +222,18 @@ body {
 	text-align: center;
 }
 
-#settings-button {
-	position: absolute;
-	display: block;
-	width: 24px;
-	height: 24px;
-	top: 20px;
-	right: 20px;
-	cursor: pointer;
-}
-
 #footer {
-	position: absolute;
+	position: relative;
 	display: block;
 	width: 100%;
-	height: 30px;
-	bottom: 0px;
-	line-height: 30px;
-	font-size: 12px;
-	font-family: monospace;
-	font-weight: 500;
-	text-align: center;
+	height: 20px;
+	line-height: 20px;
+	margin-top: 50px;
 	color: #808080;
-	background-color: #f0f0f0;
-}
-
-#settings-menu {
-	position: absolute;
-	width: 180px;
-	height: 360px;
-	top: 0px;
-	right: 0px;
-	padding: 10px;
-	background-color: #f8f8f8;
-	border-style: solid;
-	border-width: 1px;
-	border-color: #808080;
-	overflow-x: hidden;
-	overflow-y: auto;
-}
-
-#settings-title {
-	position: relative;
-	width: 100%;
-	height: 25px;
-	line-height: 25px;
-	font-size: 14px;
-	font-weight: 600;
+	font-size: 12px;
+	font-weight: 400;
 	text-align: center;
+	text-decoration: none;
 }
 
 .text, #settings-menu input, #settings-menu label {
@@ -258,19 +247,8 @@ body {
 	text-decoration: none;
 }
 
-.settings-input {
-	outline: none;
-	border-style: solid;
-	border-width: 1px;
-	border-color: #808080;
-}
-
-.settings-input:focus {
-	border-color: #000000;
-}
-
 #context-menu, #shortcut-context-menu {
-	position: relative;
+	position: absolute;
 	width: fit-content;
 	height: fit-content;
 	border-style: solid;
@@ -294,402 +272,37 @@ body {
 	</head>
 	<body>
 		<div id="main-screen">
-			<div id="container">
-				<div id="title">
- _    _         _      _               _
-| |  | |       | |    | |             | |
-| |  | | _ __  | |__  | |  ___    ___ | | __ ___  _ __
-| |  | || '_ \ | '_ \ | | / _ \  / __|| |/ // _ \| '__|
-| |__| || | | || |_) || || (_) || (__ |   &#60;|  __/| |
- \____/ |_| |_||_.__/ |_| \___/  \___||_|\_\\___||_|
-				</div>
-				<input id="input" type="text" placeholder="Search or type a URL" />
-				<div id="button-bar">
-					<div id="search-button">Unblocked Search</div>
-					<div id="random-button">I'm Feeling Lucky</div>
-				</div>
-				<div id="shortcut-bar">
-					<div id="add-shortcut" class="shortcut-item">
-						<img class="shortcut-item-icon" width="60" height="60" src="res/add.svg" />
-						<div class="shortcut-item-text">Add shortcut</div>
-					</div>
-				</div>
-				<div id="err-msg"></div>
+			<div id="logo">
+				<a id="logo-ws" href="https://www.whitespider.gq" target="_blank"></a>
+				<div id="logo-text">Site Unblocker</div>
 			</div>
-			<img id="settings-button" src="res/settings.svg" width="24" height="24" />
-			<div id="footer">Created by Ruochen Jia -- <a href="https://github.com/ruochenjia/unblocker/">GitHub Project</a></div>
-			<div id="settings-menu" style="display: none;">
-				<div id="settings-title" style="margin-bottom: 20px;">Settings</div>
-				<div class="text">Proxy server address:</div>
-				<input id="proxy-server" type="url" placeholder="https://incog.dev/bare/" style="margin-bottom: 20px;" />
-				<label for="hide-nav">Hide navigation bar address</label>
-				<input id="hide-nav" type="checkbox" />
-				
+			<input id="input" type="text" placeholder="Search or type a URL" />
+			<div id="button-bar">
+				<div id="search-button">Unblocked Search</div>
+				<div id="random-button">I'm Feeling Lucky</div>
 			</div>
+			<div id="shortcut-bar">
+				<div id="add-shortcut" class="shortcut-item">
+					<img class="shortcut-item-icon" width="60" height="60" src="res/add.svg" />
+					<div class="shortcut-item-text">Add shortcut</div>
+				</div>
+			</div>
+			<div id="footer">©2022 WhiteSpider, created and managed by <a href="https://www.github.com/ruochenjia">Ruochen Jia</a></div>
 			<div id="context-menu" style="display: none;">
 				<div id="clear-data" class="context-menu-option">Wipe site data</div>
+				<div id="unregister-sw" class="context-menu-option">Unregister SW</div>
 			</div>
 			<div id="shortcut-context-menu" style="display: none;">
 				<div id="edit-shortcut" class="context-menu-option">Edit</div>
 				<div id="delete-shortcut" class="context-menu-option">Delete</div>
 			</div>
 		</div>
-		<div id="frame-screen" style="display: none;">
-			<iframe id="frame" width="1024" height="768" allowfullscreen="true" allow=""  sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups" loading="lazy"></iframe>
-		</div>
 		<noscript>
 			<div id="noscript-screen">
 				<div id="noscript-msg">Please enable JavaScript and refresh this page to continue.</div>
 			</div>
 		</noscript>
-		<script type="text/javascript">
-"use strict";
-
-// <![CDATA[
-(() => {
-
-// override the default alert function
-function alert(msg, title, icon) {
-	// throw null;
-}
-
-function err(msg) {
-	document.getElementById("err-msg").innerHTML = msg;
-}
-
-// default error handler
-window.onerror = (msg, src, lineno, colno, e) => {
-	err(msg);
-};
-
-window.onbeforeunload = window.onunload = (e) => {
-	e.preventDefault();
-	storage.save();
-};
-
-// check window state
-if (window != window.top) {
-	// prevent this page running inside a frame
-	// as service workers may not work properly
-	document.body.innerHTML = `Running this page inside a frame is not supported, please click <a href="`+ window.location.href +`" target="_blank">here</a> to continue`;
-}
-
-Array.prototype.remove = function(element) {
-	for (let i = 0; i < this.length; i++) {
-		if (this[i] == element)
-			this.splice(i, 1);
-	}
-};
-
-let storage = (() => {
-
-let data = window.localStorage.getItem("data");
-if (data == null)
-	data = "{}";
-
-data = JSON.parse(data);
-data.save = () => window.localStorage.setItem("data", JSON.stringify(data));
-
-let autosave = () => {
-	data.save();
-	setTimeout(autosave, 10000);
-};
-autosave();
-
-return data;
-
-})();
-
-let urlInput = document.getElementById("input");
-let shortcutBar = document.getElementById("shortcut-bar");
-let addShortcutButton = document.getElementById("add-shortcut");
-let settingsMenu = document.getElementById("settings-menu");
-let contextMenu = document.getElementById("context-menu");
-let shortcutContextMenu = document.getElementById("shortcut-context-menu");
-let proxyServer = document.getElementById("proxy-server");
-let hideNav = document.getElementById("hide-nav");
-let googleSearch = "https://www.google.com/search?q=";
-let googleSearchR = "https://www.google.com/search?btnI=Im+Feeling+Lucky&q=";
-
-let shortcuts = storage.shortcuts;
-if (shortcuts == null)
-	storage.shortcuts = shortcuts = [
-		{
-			name: "Google",
-			icon: "res/google.svg",
-			link: "https://www.google.com/"
-		},
-		{
-			name: "YouTube",
-			icon: "res/youtube.svg",
-			link: "https://www.youtube.com/"
-		},
-		{
-			name: "Facebook",
-			icon: "https://www.facebook.com/favicon.ico",
-			link: "https://www.facebook.com"
-		},
-		{
-			name: "Instagram",
-			icon: "https://www.instagram.com/favicon.ico",
-			link: "https://www.instagram.com"
-		},
-		{
-			name: "TikTok",
-			icon: "res/tiktok.svg",
-			link: "https://www.tiktok.com/"
-		},
-		{
-			name: "Y8",
-			icon: "https://www.y8.com/favicon.ico",
-			link: "https://www.y8.com"
-		}
-	];
-
-let proxy = storage.proxy;
-if (proxy == null)
-	storage.proxy = proxy = "https://incog.dev/bare/";
-
-let enableFrame = storage.enableFrame;
-if (enableFrame == null)
-	storage.enableFrame = enableFrame = false;
-
-proxyServer.value = proxy;
-hideNav.checked = enableFrame;
-
-function updateShortcuts() {
-	shortcutBar.innerHTML = "";
-	for (let i = 0; i < shortcuts.length; i++) {
-		let s = shortcuts[i];
-		let item = document.createElement("div");
-		item.className = "shortcut-item";
-		item.onclick = () => _openUrl(s.link);
-		item.oncontextmenu = (e) => {
-			e.preventDefault();
-			e.stopPropagation();
-			shortcutContextMenu.style.top = e.clientY + "px";
-			shortcutContextMenu.style.left = e.clientX + "px";
-			shortcutContextMenu.style.display = "block";
-			document.getElementById("delete-shortcut").onclick = () => {
-				shortcuts.remove(s);
-				storage.shortcuts = shortcuts;
-				shortcutContextMenu.style.display = "none";
-				updateShortcuts();
-			};
-			document.getElementById("edit-shortcut").onclick = () => {
-				shortcutContextMenu.style.display = "none";
-			};
-		};
-
-		let icon = document.createElement("img");
-		icon.className = "shortcut-item-icon";
-		icon.width = 60;
-		icon.height = 60;
-		icon.src = s.icon;
-		item.appendChild(icon);
-
-		let text = document.createElement("text");
-		text.className = "shortcut-item-text";
-		text.innerHTML = s.name;
-
-		item.appendChild(text);
-		shortcutBar.appendChild(item);
-	}
-	shortcutBar.appendChild(addShortcutButton);
-}
-updateShortcuts();
-
-let __uv$config = {
-	prefix: "/OO0OO0O/",
-	bare: "https://incog.dev/bare/",
-	encodeUrl: (str) => {
-        return encodeURIComponent(str.toString().split('').map((char, ind) => ind % 2 ? String.fromCharCode(char.charCodeAt() ^ 2) : char).join(''));
-    },
-    decodeUrl: (str) => {
-        let [input, ...search] = str.split('?');
-        return decodeURIComponent(input).split('').map((char, ind) => ind % 2 ? String.fromCharCode(char.charCodeAt(0) ^ 2) : char).join('') + (search.length ? '?' + search.join('?') : '');
-    },
-	handler: "/uv/uv.handler.js",
-	bundle: "/uv/uv.bundle.js",
-	sw: "/uv/uv.sw.js"
-};
-
-urlInput.onkeydown = (e) => {
-	if (e.keyCode == 13)
-		run(googleSearch, false);
-};
-document.getElementById("search-button").onclick = () => {
-	run(googleSearch, true);
-};
-document.getElementById("random-button").onclick = () => {
-	run(googleSearchR, true);
-};
-addShortcutButton.onclick = () => {
-	err(""); // remove error message
-
-	let name = prompt("Name");
-	if (name == null)
-		return;
-	if (name.length == 0) {
-		err("Please input a name");
-		return;
-	}
-
-	let url = prompt("URL");
-	if (url == null)
-		return;
-	if (url.length == 0) {
-		err("Please input a URL");
-		return;
-	}
-
-	try {
-		url = new URL(url).href;
-	} catch(e) {
-		err("Please input a valid URL that must start with http:// or https://");
-		return;
-	}
-
-	shortcuts.push({
-		name: name,
-		icon: (() => {
-			let favicon = new URL(url);
-			favicon.pathname = "/favicon.ico";
-			return favicon.href;
-		})(),
-		link: url
-	});
-	storage.shortcuts = shortcuts;
-	updateShortcuts();
-};
-document.getElementById("clear-data").onclick = () => {
-	contextMenu.style.display = "none";	
-	window.sessionStorage.clear();
-	window.localStorage.clear();
-	window.caches.keys().then((keys) => {
-		for (let i = 0; i < keys.length; i++)
-			caches.delete(keys[i]);
-	});
-};
-document.getElementById("settings-button").onclick = (e) => {
-	e.stopPropagation();
-	settingsMenu.style.display = "block";
-};
-
-document.body.onclick = (e) => {
-	let elem = e.target;
-	if (elem != settingsMenu && !settingsMenu.contains(elem))
-		settingsMenu.style.display = "none";
-	if (elem != contextMenu && !contextMenu.contains(elem))
-		contextMenu.style.display = "none";
-	if (elem != shortcutContextMenu && !shortcutContextMenu.contains(elem))
-		shortcutContextMenu.style.display = "none";
-};
-document.oncontextmenu = (e) => {
-	e.preventDefault();
-	contextMenu.style.top = e.clientY + "px";
-	contextMenu.style.left = e.clientX + "px";
-	contextMenu.style.display = "block";
-};
-proxyServer.onblur = () => {
-	storage.proxy = proxy = proxyServer.value;
-};
-hideNav.onchange = () => {
-	storage.enableFrame = enableFrame = hideNav.checked;
-};
-
-function isUrl(str) {
-	try {
-		let url = new URL(str);
-		return url.href;
-	} catch(err) {
-		return null;
-	}
-}
-
-function isHostname(str) {
-	let containsSlash = str.includes("/");
-	let host = str;
-	if (containsSlash)
-		host = str.substring(0, str.lastIndexOf("/"));
-
-	if (/^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^(?:(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){6})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:::(?:(?:(?:[0-9a-fA-F]{1,4})):){5})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:(?:[0-9a-fA-F]{1,4})):){4})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,1}(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:(?:[0-9a-fA-F]{1,4})):){3})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,2}(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:(?:[0-9a-fA-F]{1,4})):){2})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,3}(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:[0-9a-fA-F]{1,4})):)(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,4}(?:(?:[0-9a-fA-F]{1,4})))?::)(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,5}(?:(?:[0-9a-fA-F]{1,4})))?::)(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,6}(?:(?:[0-9a-fA-F]{1,4})))?::))))$/.test(host))
-		return containsSlash || str.includes(".");
-	return false;
-}
-
-function encodeUrl(url) {
-	let eurl = __uv$config.encodeUrl(url);
-	let base = new URL(window.location.href);
-	base.pathname = "/";
-	base.search = "";
-	base = base.href.slice(0, -1);
-	return base +  __uv$config.prefix + eurl;
-}
-
-function encodeConfig() {
-	return encodeURIComponent(JSON.stringify(__uv$config));
-}
-
-function encodeSwUrl() {
-	let url = new URL(window.location.href);
-	url.pathname = "/sw.js";
-	url.search = "";
-	url = url.href;
-	__uv$config.config = url + "?config=" + encodeConfig() + "&mode=get";
-	return url + "?config=" + encodeConfig();
-}
-
-function fixUrl(url, searchUrl, searchOnly) {
-	url = url.replace(/^\s+|\s+$/gm, "");
-
-	if (searchOnly)
-		return searchUrl + encodeURIComponent(url);
-	if (isUrl(url))
-		return url;
-	if (isHostname(url))
-		return "https://" + url;
-
-	return searchUrl + encodeURIComponent(url);
-}
-
-async function openUrl(win, url) {
-	let regs = await window.navigator.serviceWorker.getRegistrations();
-	if (regs.length > 0) {
-		for (let i = 0; i < regs.length; i++)
-			await regs[i].unregister();
-
-		await openUrl(win, url);
-	} else {
-		let reg = await window.navigator.serviceWorker.register(encodeSwUrl(), { scope:  __uv$config.prefix });
-
-		// wait before redirecting to fix certain issues
-		await new Promise(resolve => {	
-			setTimeout(() => resolve(null), 500);
-		});
-		win.location = new URL(encodeUrl(url));
-	}
-}
-
-function _openUrl(url) {
-	__uv$config.bare = new URL(proxyServer.value).href;
-	if (hideNav.checked) {
-		document.getElementById("main-screen").style.display = "none";
-		document.getElementById("frame-screen").style.display = "block";
-		openUrl(document.getElementById("frame").contentWindow, url);
-	} else {
-		openUrl(window, url);
-	}
-}
-
-function run(searchUrl, searchOnly) {
-	err(""); // remove error message
-	let url = fixUrl(urlInput.value, searchUrl, searchOnly);
-	_openUrl(url);
-}
-
-})();
-// ]]>
-		</script>
+		<script type="text/javascript" src="uv/uv.config.js"></script>
+		<script type="text/javascript" src="main.js"></script>
 	</body>
 </html>
