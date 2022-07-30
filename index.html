@@ -6,18 +6,17 @@
 		<meta http-equiv="Referrer-Policy" content="no-referrer" />
 		<meta name="referrer" content="no-referrer" />
 		<meta name="robots" content="noindex,nofollow" />
-		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1" />
 		<base href="/" />
 		<link rel="icon" type="image/x-icon" href="favicon.ico" />
 		<link rel="manifest" type="text/plain" href="manifest.json" />
-		<title>ChromeHack Site Unblocker</title>
+		<title>WhiteSpider Site Unblocker</title>
 		<script type="text/javascript" src="https://webalert.pages.dev/webalert.js"></script>
 		<style type="text/css">
 * {
 	margin: 0px;
 	padding: 0px;
 }
-
 
 @font-face {
 	font-family: "Ubuntu";
@@ -40,9 +39,10 @@ body {
 	font-family: "Ubuntu";
 	font-size: 14px;
 	font-weight: 500;
+	font-style: normal;
 }
 
-#main-screen, #noscript-screen, #frame-screen {
+#main-screen, #noscript-screen {
 	position: absolute;
 	width: 100%;
 	height: 100%;
@@ -50,7 +50,7 @@ body {
 	top: 0px;
 	right: 0px;
 	bottom: 0px;
-	color: #000000;
+	color: #303030;
 	background-color: #ffffff;
 }
 
@@ -59,15 +59,7 @@ body {
 	box-sizing: border-box;
 }
 
-#frame {
-	position: absolute;
-	display: block;
-	width: 100%;
-	height: 100%;
-	border: none;
-}
-
-#logo-container {
+#logo {
 	position: relative;
 	display: block;
 	width: fit-content;
@@ -76,9 +68,11 @@ body {
 	margin-right: auto;
 	margin-top: 100px;
 	margin-bottom: 20px;
+	user-select: none;
 }
 
-#logo {
+
+#logo-ws {
 	position: relative;
 	display: block;
 	width: 512px;
@@ -88,7 +82,7 @@ body {
 	background-size: contain;
 }
 
-#sublogo {
+#logo-text {
 	position: relative;
 	display: block;
 	width: 384px;
@@ -104,7 +98,6 @@ body {
 	text-decoration: none;
 	user-select: none;
 }
-
 
 #input {
 	position: relative;
@@ -229,19 +222,6 @@ body {
 	text-align: center;
 }
 
-#settings-button {
-	position: absolute;
-	display: block;
-	width: 24px;
-	height: 24px;
-	top: 20px;
-	right: 20px;
-	cursor: pointer;
-	background-image: url("res/settings.svg");
-	background-repeat: no-repeat;
-	background-size: contain;
-}
-
 #footer {
 	position: relative;
 	display: block;
@@ -250,35 +230,10 @@ body {
 	line-height: 20px;
 	margin-top: 50px;
 	color: #808080;
-	font-size: 10px;
+	font-size: 12px;
 	font-weight: 400;
 	text-align: center;
 	text-decoration: none;
-}
-
-#settings-menu {
-	position: absolute;
-	width: 180px;
-	height: 360px;
-	top: 0px;
-	right: 0px;
-	padding: 10px;
-	background-color: #f8f8f8;
-	border-style: solid;
-	border-width: 1px;
-	border-color: #808080;
-	overflow-x: hidden;
-	overflow-y: auto;
-}
-
-#settings-title {
-	position: relative;
-	width: 100%;
-	height: 25px;
-	line-height: 25px;
-	font-size: 14px;
-	font-weight: 600;
-	text-align: center;
 }
 
 .text, #settings-menu input, #settings-menu label {
@@ -290,17 +245,6 @@ body {
 	font-size: 14px;
 	text-align: start;
 	text-decoration: none;
-}
-
-.settings-input {
-	outline: none;
-	border-style: solid;
-	border-width: 1px;
-	border-color: #808080;
-}
-
-.settings-input:focus {
-	border-color: #000000;
 }
 
 #context-menu, #shortcut-context-menu {
@@ -328,9 +272,9 @@ body {
 	</head>
 	<body>
 		<div id="main-screen">
-			<div id="logo-container">
-				<div id="logo"></div>
-				<div id="sublogo">Site Unblocker</div>
+			<div id="logo">
+				<a id="logo-ws" href="https://www.whitespider.gq" target="_blank"></a>
+				<div id="logo-text">Site Unblocker</div>
 			</div>
 			<input id="input" type="text" placeholder="Search or type a URL" />
 			<div id="button-bar">
@@ -343,17 +287,7 @@ body {
 					<div class="shortcut-item-text">Add shortcut</div>
 				</div>
 			</div>
-			<div id="err-msg"></div>
-			<div id="settings-button"></div>
-			<div id="footer">©2022 ChromeHack, part of The Unblocking Project</div>
-			<div id="settings-menu" style="display: none;">
-				<div id="settings-title" style="margin-bottom: 20px;">Settings</div>
-				<div class="text">Proxy server address:</div>
-				<input id="proxy-server" type="url" placeholder="https://incog.dev/bare/" style="margin-bottom: 20px;" />
-				<label for="hide-nav">Hide navigation bar address</label>
-				<input id="hide-nav" type="checkbox" />
-				
-			</div>
+			<div id="footer">©2022 WhiteSpider, created and managed by <a href="https://www.github.com/ruochenjia">Ruochen Jia</a></div>
 			<div id="context-menu" style="display: none;">
 				<div id="clear-data" class="context-menu-option">Wipe site data</div>
 				<div id="unregister-sw" class="context-menu-option">Unregister SW</div>
@@ -363,15 +297,12 @@ body {
 				<div id="delete-shortcut" class="context-menu-option">Delete</div>
 			</div>
 		</div>
-		<div id="frame-screen" style="display: none;">
-			<iframe id="frame" width="1024" height="768" allowfullscreen="true" allow=""  sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups" loading="lazy"></iframe>
-		</div>
 		<noscript>
 			<div id="noscript-screen">
 				<div id="noscript-msg">Please enable JavaScript and refresh this page to continue.</div>
 			</div>
 		</noscript>
-		<script type="text/javascript" src="sw.js?mode=get"></script>
+		<script type="text/javascript" src="uv/uv.config.js"></script>
 		<script type="text/javascript" src="main.js"></script>
 	</body>
 </html>

@@ -44,7 +44,10 @@ let storage = (() => {
 
 if(!("serviceWorker" in navigator)) {
 	// service workers are not supported
-	alert("Your browser does not support service workers, please use a supported browser to continue", "Warning");
+	new webAlert.Dialog({
+		title: "Warning",
+		message: "Your browser does not support service workers, please use a supported browser to continue"
+	}).show();
 	return;
 }
 
@@ -53,20 +56,23 @@ if (window != window.top) {
 	alert(`This page might not function properly while running inside a frame, please click <a href="${window.location.href}" target="_blank">here</a> to open it in a new tab.`, "Warning");
 }
 
-let swReg = window.navigator.serviceWorker.register("/sw.js", {
+window.navigator.serviceWorker.register("/sw.js", {
 	scope: "/",
 	type: "classic",
 	updateViaCache: "all"
+}).catch((err) => {
+	new webAlert.Dialog({
+		title: "Error",
+		message: "Failed to register service worker, please reload this page and try again with a different browser."
+	});
+	console.warn(err);
 });
 
 let urlInput = document.getElementById("input");
 let shortcutBar = document.getElementById("shortcut-bar");
 let addShortcutButton = document.getElementById("add-shortcut");
-let settingsMenu = document.getElementById("settings-menu");
 let contextMenu = document.getElementById("context-menu");
 let shortcutContextMenu = document.getElementById("shortcut-context-menu");
-let proxyServer = document.getElementById("proxy-server");
-let hideNav = document.getElementById("hide-nav");
 let googleSearch = "https://www.google.com/search?q=";
 let googleSearchR = "https://www.google.com/search?btnI=Im+Feeling+Lucky&q=";
 
@@ -105,19 +111,13 @@ if (shortcuts == null)
 		}
 	];
 
-let proxy = storage.getItem("proxy", "https://incog.dev/bare/");
-let enableFrame = storage.getItem("frame", false);
-
-proxyServer.value = proxy;
-hideNav.checked = enableFrame;
-
 function updateShortcuts() {
 	shortcutBar.innerHTML = "";
 	for (let i = 0; i < shortcuts.length; i++) {
 		let s = shortcuts[i];
 		let item = document.createElement("div");
 		item.className = "shortcut-item";
-		item.onclick = () => _openUrl(s.link);
+		item.onclick = () => openUrl(s.link);
 		item.oncontextmenu = (e) => {
 			e.preventDefault();
 			e.stopPropagation();
@@ -220,15 +220,8 @@ document.getElementById("unregister-sw").onclick = () => {
 	})();
 };
 
-document.getElementById("settings-button").onclick = (e) => {
-	e.stopPropagation();
-	settingsMenu.style.display = "block";
-};
-
 document.body.onclick = (e) => {
 	let elem = e.target;
-	if (elem != settingsMenu && !settingsMenu.contains(elem))
-		settingsMenu.style.display = "none";
 	if (elem != contextMenu && !contextMenu.contains(elem))
 		contextMenu.style.display = "none";
 	if (elem != shortcutContextMenu && !shortcutContextMenu.contains(elem))
@@ -239,12 +232,6 @@ document.oncontextmenu = (e) => {
 	contextMenu.style.top = e.clientY + "px";
 	contextMenu.style.left = e.clientX + "px";
 	contextMenu.style.display = "block";
-};
-proxyServer.onblur = () => {
-	storage.proxy = proxy = proxyServer.value;
-};
-hideNav.onchange = () => {
-	storage.enableFrame = enableFrame = hideNav.checked;
 };
 
 function isUrl(str) {
@@ -288,24 +275,13 @@ function fixUrl(url, searchUrl, searchOnly) {
 	return searchUrl + encodeURIComponent(url);
 }
 
-async function openUrl(win, url) {
+function openUrl(url) {
 	win.location = new URL(encodeUrl(url));
-}
-
-function _openUrl(url) {
-	__uv$config.bare = new URL(proxyServer.value).href;
-	if (hideNav.checked) {
-		document.getElementById("main-screen").style.display = "none";
-		document.getElementById("frame-screen").style.display = "block";
-		openUrl(document.getElementById("frame").contentWindow, url);
-	} else {
-		openUrl(window, url);
-	}
 }
 
 function run(searchUrl, searchOnly) {
 	let url = fixUrl(urlInput.value, searchUrl, searchOnly);
-	_openUrl(url);
+	openUrl(url);
 }
 
 })();
