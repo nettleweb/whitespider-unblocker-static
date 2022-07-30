@@ -276,7 +276,7 @@ function fixUrl(url, searchUrl, searchOnly) {
 }
 
 function openUrl(url) {
-	win.location = new URL(encodeUrl(url));
+	window.location = new URL(encodeUrl(url));
 }
 
 function run(searchUrl, searchOnly) {
