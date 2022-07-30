@@ -5,7 +5,6 @@
 
 importScripts("/uv/uv.config.js");
 importScripts("/uv/uv.sw.js");
-importScripts("/app.js");
 
 const sw = new UVServiceWorker();
 const cacheName =  self.location.hostname + "-" + "whitespider-site-unblocker";
