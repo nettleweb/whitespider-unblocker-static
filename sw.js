@@ -11,7 +11,7 @@ const cacheName =  self.location.hostname + "-" + "whitespider-site-unblocker";
 
 async function fetchRe({ request }) {
 	request.request = request;
-	if (request.url.startsWith(self.location.origin + __uv$config .prefix))
+	if (request.url.startsWith(self.location.origin + __uv$config.prefix))
 		return await sw.fetch(request);
 
 	let response = await caches.match(request);
