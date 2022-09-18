@@ -12,18 +12,23 @@
 	"scope": "/",
 	"icons": [
 		{
-			"src": "res/logo64.png",
+			"src": "https://whitespider.gq/res/logo64.png",
 			"sizes": "64x64",
 			"type": "image/png"
 		},
 		{
-			"src": "res/logo128.png",
+			"src": "https://whitespider.gq/res/logo128.png",
 			"sizes": "128x128",
 			"type": "image/png"
 		},
 		{
-			"src": "res/logo256.png",
+			"src": "https://whitespider.gq/res/logo256.png",
 			"sizes": "256x256",
+			"type": "image/png"
+		},
+		{
+			"src": "https://whitespider.gq/res/logo512.png",
+			"sizes": "512x512",
 			"type": "image/png"
 		}
 	]

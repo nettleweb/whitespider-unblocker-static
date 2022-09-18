@@ -9,39 +9,12 @@
 		<base href="/" />
 		<link rel="icon" type="image/x-icon" href="favicon.ico" />
 		<link rel="manifest" type="text/plain" href="manifest.json" />
-		<title>WhiteSpider Site Unblocker</title>
 		<script type="text/javascript" src="https://webalert.pages.dev/webalert.js"></script>
+		<title>WhiteSpider Site Unblocker</title>
 		<style type="text/css">
-* {
-	margin: 0px;
-	padding: 0px;
-}
+@import url("https://whitespider.gq/standard.css");
 
-@font-face {
-	font-family: "Ubuntu";
-	font-style: normal;
-	src: url("res/ubuntu.ttf") format("truetype");
-}
-
-@font-face {
-	font-family: "Ubuntu Mono";
-	font-style: normal;
-	src: url("res/ubuntu-mono.ttf") format("truetype");
-}
-
-body {
-	position: absolute;
-	display: block;
-	width: 100%;
-	height: 100%;
-	overflow-x: hidden;
-	font-family: "Ubuntu";
-	font-size: 14px;
-	font-weight: 500;
-	font-style: normal;
-}
-
-#main-screen, #noscript-screen {
+#noscript-screen {
 	position: absolute;
 	width: 100%;
 	height: 100%;
@@ -49,8 +22,8 @@ body {
 	top: 0px;
 	right: 0px;
 	bottom: 0px;
-	color: #303030;
-	background-color: #ffffff;
+	color: #ffffff;
+	background-color: #001a1a;
 }
 
 #noscript-screen {
@@ -70,13 +43,12 @@ body {
 	user-select: none;
 }
 
-
 #logo-ws {
 	position: relative;
 	display: block;
 	width: 512px;
 	height: 128px;
-	background-image: url("res/logo.svg");
+	background-image: url("https://whitespider.gq/res/logo.svg");
 	background-repeat: no-repeat;
 	background-size: contain;
 }
@@ -110,17 +82,15 @@ body {
 	padding-right: 25px;
 	outline: none;
 	font-size: 16px;
-	font-weight: inherit;
-	font-family: inherit;
-	font-style: inherit;
 	border-style: solid;
 	border-width: 1px;
-	border-color: #b0b0b0;
+	border-color: #808080;
 	border-radius: 25px;
+	background-color: rgba(0, 0, 0, 0);
 }
 
 #input:focus {
-	border-color: #808080;
+	border-color: #ffffff;
 }
 
 #button-bar {
@@ -131,7 +101,7 @@ body {
 	margin-left: auto;
 	margin-right: auto;
 	margin-top: 20px;
-	margin-bottom: 20px;
+	margin-bottom: 50px;
 }
 
 #button-bar div {
@@ -143,24 +113,23 @@ body {
 	cursor: pointer;
 	margin-left: 10px;
 	margin-right: 10px;
-	color: #000000;
-	background-color: #c0c0c0;
-	font-size: 12px;
+	color: #ffffff;
+	background-color: #005050;
 	user-select: none;
 	border-style: solid;
 	border-width: 1px;
 	border-radius: 25px;
-	border-top-color: #f0f0f0;
-	border-left-color: #f0f0f0;
-	border-bottom-color: #101010;
-	border-right-color: #101010;
+	border-top-color: #00a0a0;
+	border-left-color: #00a0a0;
+	border-bottom-color: #000a0a;
+	border-right-color: #000a0a;
 }
 
 #button-bar div:active {
-	border-top-color: #101010;
-	border-left-color: #101010;
-	border-bottom-color: #f0f0f0;
-	border-right-color: #f0f0f0;
+	border-top-color: #000a0a;
+	border-left-color: #000a0a;
+	border-bottom-color: #00a0a0;
+	border-right-color: #00a0a0;
 }
 
 #shortcut-bar {
@@ -182,10 +151,20 @@ body {
 	padding: 10px;
 	cursor: pointer;
 	user-select: none;
+	border-style: dotted;
+	border-width: 1px;
+	border-color: rgba(0, 0, 0, 0);
+	border-radius: 25px;
 }
 
 .shortcut-item:hover {
-	background-color: #e0e0e0;
+	border-color: #003a3a;
+	background-color: #005a5a;
+}
+
+.shortcut-item:active {
+	border-color: #003a3a;
+	background-color: #005f5f;
 }
 
 .shortcut-item-icon {
@@ -215,7 +194,7 @@ body {
 	width: 100%;
 	height: fit-content;
 	margin-top: 15px;
-	color: #ff0000;
+	color: #ff8080;
 	font-size: 12px;
 	font-weight: 600;
 	text-align: center;
@@ -228,11 +207,20 @@ body {
 	height: 20px;
 	line-height: 20px;
 	margin-top: 50px;
-	color: #808080;
+	color: #b0b0b0;
 	font-size: 12px;
 	font-weight: 400;
 	text-align: center;
 	text-decoration: none;
+}
+
+a {
+	position: relative;
+	width: fit-content;
+	height: fit-content;
+	color: inherit;
+	cursor: pointer;
+	text-decoration: underline;
 }
 
 .text, #settings-menu input, #settings-menu label {
@@ -252,49 +240,57 @@ body {
 	height: fit-content;
 	border-style: solid;
 	border-width: 1px;
-	border-color: #808080;
-	background-color: #f8f8f8;
+	border-color: #ffffff;
+	color: #303030;
+	background-color: #f0f0f0;
 }
 
 .context-menu-option {
 	position: relative;
 	width: auto;
-	height: fit-content;
-	padding: 5px;
+	height: 14px;
+	padding: 10px;
+	line-height: 14px;
+	font-size: 14px;
+	font-weight: 500;
 	cursor: pointer;
+	user-select: none;
 }
 
 .context-menu-option:hover {
+	color: #ffffff;
+	background-color: #001a1a;
+}
+
+.context-menu-option[disabled]:hover {
+	color: #ffffff;
 	background-color: #808080;
 }
 		</style>
 	</head>
 	<body>
-		<div id="main-screen">
-			<div id="logo">
-				<a id="logo-ws" href="https://www.whitespider.gq" target="_blank"></a>
-				<div id="logo-text">Site Unblocker</div>
+		<div id="logo">
+			<a id="logo-ws" href="https://whitespider.gq" target="_blank"></a>
+			<div id="logo-text">Site Unblocker</div>
+		</div>
+		<input id="input" type="text" placeholder="Search or type a URL" />
+		<div id="button-bar">
+			<div id="search-button">Unblocked Search</div>
+			<div id="random-button">I'm Feeling Lucky</div>
+		</div>
+		<div id="shortcut-bar">
+			<div id="add-shortcut" class="shortcut-item">
+				<img class="shortcut-item-icon" width="60" height="60" src="res/add.svg" />
+				<div class="shortcut-item-text">Add shortcut</div>
 			</div>
-			<input id="input" type="text" placeholder="Search or type a URL" />
-			<div id="button-bar">
-				<div id="search-button">Unblocked Search</div>
-				<div id="random-button">I'm Feeling Lucky</div>
-			</div>
-			<div id="shortcut-bar">
-				<div id="add-shortcut" class="shortcut-item">
-					<img class="shortcut-item-icon" width="60" height="60" src="res/add.svg" />
-					<div class="shortcut-item-text">Add shortcut</div>
-				</div>
-			</div>
-			<div id="footer">©2022 WhiteSpider, created and managed by <a href="https://www.github.com/ruochenjia">Ruochen Jia</a></div>
-			<div id="context-menu" style="display: none;">
-				<div id="clear-data" class="context-menu-option">Wipe site data</div>
-				<div id="unregister-sw" class="context-menu-option">Unregister SW</div>
-			</div>
-			<div id="shortcut-context-menu" style="display: none;">
-				<div id="edit-shortcut" class="context-menu-option">Edit</div>
-				<div id="delete-shortcut" class="context-menu-option">Delete</div>
-			</div>
+		</div>
+		<div id="footer">©2022 WhiteSpider, created and managed by <a href="https://www.github.com/ruochenjia">Ruochen Jia</a></div>
+		<div id="context-menu" style="display: none;">
+			<div class="context-menu-option" disabled="true">(empty)</div>
+		</div>
+		<div id="shortcut-context-menu" style="display: none;">
+			<div id="edit-shortcut" class="context-menu-option">Edit</div>
+			<div id="delete-shortcut" class="context-menu-option">Delete</div>
 		</div>
 		<noscript>
 			<div id="noscript-screen">

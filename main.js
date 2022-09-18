@@ -1,17 +1,9 @@
 "use strict";
 
 (() => {
-function err(msg) {
-	alert(msg, "Error");
-}
-
 // default error handler
 window.onerror = (msg, src, lineno, colno, e) => {
-	err(msg);
-};
-
-window.onbeforeunload = window.onunload = (e) => {
-	storage.save();
+	alert(msg, "Error");
 };
 
 Array.prototype.remove = function(element) {
@@ -21,39 +13,65 @@ Array.prototype.remove = function(element) {
 	}
 };
 
+function testLocalStorage() {
+	try {
+		localStorage.setItem("test", "___test");
+		if (localStorage.getItem("test") !== "___test")
+			throw "Value mismatch";
+		localStorage.removeItem("test");
+		return true;
+	} catch (err) {
+		return false;
+	}
+}
+
 let storage = (() => {
-	let data = window.localStorage.getItem("data");
-	if (data == null)
-		data = "{}";
-	data = JSON.parse(data);
-	data.save = () => window.localStorage.setItem("data", JSON.stringify(data));
-	data.getItem = (key, def) => {
-		let item = data[key];
+	let base;
+
+	if (testLocalStorage()) {
+		let data = localStorage.getItem("data");
+		if (data == null)
+			data = "{}";
+
+		base = JSON.parse(data);
+		base.save = function () {
+			localStorage.setItem("data", JSON.stringify(this));
+		};
+
+		// autosave
+		setInterval(() => {
+			base.save();
+		}, 10000);
+	} else {
+		alert("Local storage is disabled by your browser, your game data will not be saved.", "Warning");
+		base = {
+			save: () => {
+				// stub
+			}
+		};
+	}
+
+	base.getItem = function (key, def) {
+		let item = this[key];
 		if (item == null)
-			return data[key] = def;
+			return this[key] = def;
 		return item;
 	};
 
-	let autosave = () => {
-		data.save();
-		setTimeout(autosave, 10000);
-	};
-	autosave();
-	return data;
+	return base;
 })();
+
+window.onbeforeunload = window.onunload = () => {
+	storage.save();
+};
 
 if(!("serviceWorker" in navigator)) {
 	// service workers are not supported
 	new webAlert.Dialog({
 		title: "Warning",
-		message: "Your browser does not support service workers, please use a supported browser to continue"
+		message: "Your browser does not support service workers, please use a supported browser to continue."
 	}).show();
 	return;
-}
-
-if (window != window.top) {
-	// service workers are very likely to be rejected inside a frame
-	alert(`This page might not function properly while running inside a frame, please click <a href="${window.location.href}" target="_blank">here</a> to open it in a new tab.`, "Warning");
 }
 
 window.navigator.serviceWorker.register("/sw.js", {
@@ -63,7 +81,7 @@ window.navigator.serviceWorker.register("/sw.js", {
 }).catch((err) => {
 	new webAlert.Dialog({
 		title: "Error",
-		message: "Failed to register service worker, please reload this page and try again with a different browser."
+		message: "Failed to register service worker, please reload this page or try again with a different browser."
 	});
 	console.warn(err);
 });
@@ -202,23 +220,6 @@ addShortcutButton.onclick = async () => {
 	storage.shortcuts = shortcuts;
 	updateShortcuts();
 };
-document.getElementById("clear-data").onclick = () => {
-	contextMenu.style.display = "none";
-	window.sessionStorage.clear();
-	window.localStorage.clear();
-	window.caches.keys().then((keys) => {
-		for (let i = 0; i < keys.length; i++)
-			caches.delete(keys[i]);
-	});
-};
-document.getElementById("unregister-sw").onclick = () => {
-	contextMenu.style.display = "none";
-	(async () => {
-		let regs = await window.navigator.serviceWorker.getRegistrations();
-		for (let i = 0; i < regs.length; i++)
-			await regs[i].unregister();
-	})();
-};
 
 document.body.onclick = (e) => {
 	let elem = e.target;
@@ -244,22 +245,12 @@ function isUrl(str) {
 
 function isHostname(str) {
 	let containsSlash = str.includes("/");
-	let host = str;
 	if (containsSlash)
-		host = str.substring(0, str.indexOf("/"));
+		str = str.substring(0, str.indexOf("/"));
 
-	if (/^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^(?:(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){6})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:::(?:(?:(?:[0-9a-fA-F]{1,4})):){5})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:(?:[0-9a-fA-F]{1,4})):){4})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,1}(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:(?:[0-9a-fA-F]{1,4})):){3})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,2}(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:(?:[0-9a-fA-F]{1,4})):){2})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,3}(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:[0-9a-fA-F]{1,4})):)(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,4}(?:(?:[0-9a-fA-F]{1,4})))?::)(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,5}(?:(?:[0-9a-fA-F]{1,4})))?::)(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,6}(?:(?:[0-9a-fA-F]{1,4})))?::))))$/.test(host))
+	if (/^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^(?:(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){6})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:::(?:(?:(?:[0-9a-fA-F]{1,4})):){5})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:(?:[0-9a-fA-F]{1,4})):){4})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,1}(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:(?:[0-9a-fA-F]{1,4})):){3})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,2}(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:(?:[0-9a-fA-F]{1,4})):){2})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,3}(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:[0-9a-fA-F]{1,4})):)(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,4}(?:(?:[0-9a-fA-F]{1,4})))?::)(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,5}(?:(?:[0-9a-fA-F]{1,4})))?::)(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,6}(?:(?:[0-9a-fA-F]{1,4})))?::))))$/.test(str))
 		return containsSlash || str.includes(".");
 	return false;
-}
-
-function encodeUrl(url) {
-	let eurl = __uv$config.encodeUrl(url);
-	let base = new URL(window.location.href);
-	base.pathname = "/";
-	base.search = "";
-	base = base.href.slice(0, -1);
-	return base +  __uv$config.prefix + eurl;
 }
 
 function fixUrl(url, searchUrl, searchOnly) {
@@ -276,7 +267,7 @@ function fixUrl(url, searchUrl, searchOnly) {
 }
 
 function openUrl(url) {
-	window.location = new URL(encodeUrl(url));
+	window.location = new URL(window.location.origin +  __uv$config.prefix + __uv$config.encodeUrl(url));
 }
 
 function run(searchUrl, searchOnly) {
@@ -285,3 +276,5 @@ function run(searchUrl, searchOnly) {
 }
 
 })();
+
+console.log("%cPage Verified", `position: relative;display: block;width: fit-content;height: fit-content;color: #ffffff;background-color: #008000;font-size: 14px;font-weight: 600;font-family: "Ubuntu Mono";font-stretch: normal;text-align: start;text-decoration: none;`);
