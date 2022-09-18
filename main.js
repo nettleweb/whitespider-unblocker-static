@@ -43,7 +43,7 @@ let storage = (() => {
 			base.save();
 		}, 10000);
 	} else {
-		alert("Local storage is disabled by your browser, your game data will not be saved.", "Warning");
+		alert("Local storage is disabled by your browser, your browsing data will not be saved.", "Warning");
 		base = {
 			save: () => {
 				// stub
