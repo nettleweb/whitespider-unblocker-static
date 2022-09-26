@@ -2,7 +2,7 @@
 self.app = {
 	debug: true,
 	cacheName: "whitespider-unblocker",
-	cacheVersion: "0.1.0",
+	cacheVersion: "0.1.1",
 	cacheList: [],
 	headers: {
 		"Access-Control-Allow-Origin": "*",
