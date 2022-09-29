@@ -13,9 +13,14 @@
 		<link rel="manifest" type="text/plain" href="manifest.json" />
 		<link rel="canonical" href="https://unblocker.whitespider.gq/" />
 		<script type="text/javascript" src="https://webalert.pages.dev/webalert.js"></script>
-		<title>WhiteSpider Site Unblocker</title>
+		<script type="text/javascript" src="app.js"></script>
+		<title>WhiteSpider Unblocker</title>
 		<style type="text/css">
 @import url("https://whitespider.gq/standard.css");
+
+body {
+	overflow-y: auto;
+}
 
 #noscript-screen {
 	position: absolute;
@@ -26,7 +31,7 @@
 	right: 0px;
 	bottom: 0px;
 	color: #ffffff;
-	background-color: #001a1a;
+	background-color: #1a001a;
 }
 
 #noscript-screen {
@@ -37,7 +42,7 @@
 #logo {
 	position: relative;
 	display: block;
-	width: fit-content;
+	width: 512px;
 	height: fit-content;
 	margin-left: auto;
 	margin-right: auto;
@@ -49,7 +54,7 @@
 #logo-ws {
 	position: relative;
 	display: block;
-	width: 512px;
+	width: 100%;
 	height: 128px;
 	background-image: url("https://whitespider.gq/res/logo.svg");
 	background-repeat: no-repeat;
@@ -59,12 +64,13 @@
 #logo-text {
 	position: relative;
 	display: block;
-	width: 384px;
-	height: fit-content;
+	width: 75%;
+	height: 20px;
 	margin-left: auto;
 	margin-right: auto;
-	margin-top: 10px;
+	margin-bottom: 20px;
 	color: #808080;
+	line-height: 20px;
 	font-size: 18px;
 	font-style: italic;
 	font-weight: 600;
@@ -76,7 +82,7 @@
 #input {
 	position: relative;
 	display: block;
-	width: 50%;
+	width: calc(100% - 50px);
 	height: 25px;
 	margin: auto;
 	padding-top: 10px;
@@ -90,6 +96,29 @@
 	border-color: #808080;
 	border-radius: 25px;
 	background-color: rgba(0, 0, 0, 0);
+}
+
+@media all and (max-width: 512px) {
+	#logo {
+		width: 100%;
+	}
+
+	#input {
+		width: calc(90% - 50px);
+	}
+}
+
+#settings {
+	position: absolute;
+	display: block;
+	width: 20px;
+	height: 20px;
+	right: 15px;
+	top: 15px;
+	cursor: pointer;
+	background-image: url("res/settings.svg");
+	background-size: contain;
+	background-repeat: no-repeat;
 }
 
 #input:focus {
@@ -237,8 +266,9 @@ a {
 	text-decoration: none;
 }
 
-#context-menu, #shortcut-context-menu {
+.context-menu {
 	position: absolute;
+	display: none;
 	width: fit-content;
 	height: fit-content;
 	border-style: solid;
@@ -248,7 +278,7 @@ a {
 	background-color: #f0f0f0;
 }
 
-.context-menu-option {
+.context-menu div {
 	position: relative;
 	width: auto;
 	height: 14px;
@@ -260,23 +290,24 @@ a {
 	user-select: none;
 }
 
-.context-menu-option:hover {
+.context-menu div:hover {
 	color: #ffffff;
-	background-color: #001a1a;
+	background-color: #1a001a;
 }
 
-.context-menu-option[disabled]:hover {
+.context-menu div:active {
 	color: #ffffff;
-	background-color: #808080;
+	background-color: #002a2a;
 }
 		</style>
 	</head>
 	<body>
 		<div id="logo">
 			<a id="logo-ws" href="https://whitespider.gq" target="_blank"></a>
-			<div id="logo-text">Site Unblocker</div>
+			<div id="logo-text">Unblocker</div>
+			<input id="input" type="text" value="" placeholder="Search or Type a URL" />
 		</div>
-		<input id="input" type="text" placeholder="Search or type a URL" />
+		<div id="settings"></div>
 		<div id="button-bar">
 			<div id="search-button">Unblocked Search</div>
 			<div id="random-button">I'm Feeling Lucky</div>
@@ -287,13 +318,14 @@ a {
 				<div class="shortcut-item-text">Add shortcut</div>
 			</div>
 		</div>
-		<div id="footer">©2022 WhiteSpider, created and managed by <a href="https://www.github.com/ruochenjia">Ruochen Jia</a></div>
-		<div id="context-menu" style="display: none;">
-			<div class="context-menu-option" disabled="true">(empty)</div>
+		<div id="footer">WhiteSpider Unblocker v<span id="version"></span> | Created by <a href="https://github.com/ruochenjia" target="_blank">Ruochen Jia</a> | Open source on <a href="https://github.com/ruochenjia/whitespider-unblocker" target="_blank">GitHub</a></div>
+		<div id="context-menu" class="context-menu">
+			<div id="clear-site-data">Clear site data</div>
+			<div id="clear-cache">Clear cache</div>
 		</div>
-		<div id="shortcut-context-menu" style="display: none;">
-			<div id="edit-shortcut" class="context-menu-option">Edit</div>
-			<div id="delete-shortcut" class="context-menu-option">Delete</div>
+		<div id="shortcut-context-menu" class="context-menu">
+			<div id="edit-shortcut">Edit</div>
+			<div id="delete-shortcut">Delete</div>
 		</div>
 		<noscript>
 			<div id="noscript-screen">

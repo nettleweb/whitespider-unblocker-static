@@ -95,7 +95,7 @@ let googleSearch = "https://www.google.com/search?q=";
 let googleSearchR = "https://www.google.com/search?btnI=Im+Feeling+Lucky&q=";
 
 let shortcuts = storage.shortcuts;
-if (shortcuts == null)
+if (shortcuts == null) {
 	storage.shortcuts = shortcuts = [
 		{
 			name: "Google",
@@ -128,6 +128,7 @@ if (shortcuts == null)
 			link: "https://www.y8.com"
 		}
 	];
+}
 
 function updateShortcuts() {
 	shortcutBar.innerHTML = "";
@@ -145,11 +146,9 @@ function updateShortcuts() {
 			document.getElementById("delete-shortcut").onclick = () => {
 				shortcuts.remove(s);
 				storage.shortcuts = shortcuts;
-				shortcutContextMenu.style.display = "none";
 				updateShortcuts();
 			};
 			document.getElementById("edit-shortcut").onclick = () => {
-				shortcutContextMenu.style.display = "none";
 			};
 		};
 
@@ -182,6 +181,18 @@ document.getElementById("search-button").onclick = () => {
 };
 document.getElementById("random-button").onclick = () => {
 	run(googleSearchR, true);
+};
+document.getElementById("clear-site-data").onclick = async () => {
+	window.sessionStorage.clear();
+	window.localStorage.clear();
+	let databases = await indexedDB.databases();
+	for (let i = 0; i < databases.length; i++)
+		indexedDB.deleteDatabase(databases[i].name);
+};
+document.getElementById("clear-cache").onclick = async () => {
+	let keys = await caches.keys();
+	for (let i = 0; i < keys.length; i++)
+		await caches.delete(keys[i]);
 };
 addShortcutButton.onclick = async () => {
 	let name = await prompt("Name");
@@ -221,12 +232,9 @@ addShortcutButton.onclick = async () => {
 	updateShortcuts();
 };
 
-document.body.onclick = (e) => {
-	let elem = e.target;
-	if (elem != contextMenu && !contextMenu.contains(elem))
-		contextMenu.style.display = "none";
-	if (elem != shortcutContextMenu && !shortcutContextMenu.contains(elem))
-		shortcutContextMenu.style.display = "none";
+document.body.onclick = () => {
+	contextMenu.style.display = "none";
+	shortcutContextMenu.style.display = "none";
 };
 document.oncontextmenu = (e) => {
 	e.preventDefault();
@@ -234,6 +242,7 @@ document.oncontextmenu = (e) => {
 	contextMenu.style.left = e.clientX + "px";
 	contextMenu.style.display = "block";
 };
+document.getElementById("version").innerHTML = app.cacheVersion;
 
 function isUrl(str) {
 	try {

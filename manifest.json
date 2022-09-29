@@ -1,13 +1,13 @@
 {
 	"manifest_version": 2,
-	"name": "WhiteSpider Site Unblocker",
+	"name": "WhiteSpider Unblocker",
 	"short_name": "Unblocker",
-	"description": "",
+	"description": "Unblock websites through a proxy server, bypass the restrictions of local network and browser extensions.",
 	"version": "0.1.0",
 	"display": "fullscreen",
 	"orientation": "any",
-	"background_color": "#001a1a",
-	"theme_color": "#001a1a",
+	"background_color": "#1a001a",
+	"theme_color": "#1a001a",
 	"start_url": "/",
 	"scope": "/",
 	"icons": [
