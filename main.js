@@ -67,10 +67,7 @@ window.onbeforeunload = window.onunload = () => {
 
 if(!("serviceWorker" in navigator)) {
 	// service workers are not supported
-	new webAlert.Dialog({
-		title: "Warning",
-		message: "Your browser does not support service workers, please use a supported browser to continue."
-	}).show();
+	block("Your browser does not support service workers, please use a supported browser to continue.", "Warning");
 	return;
 }
 
@@ -79,10 +76,7 @@ window.navigator.serviceWorker.register("/sw.js", {
 	type: "classic",
 	updateViaCache: "all"
 }).catch((err) => {
-	new webAlert.Dialog({
-		title: "Error",
-		message: "Failed to register service worker, please reload this page or try again with a different browser."
-	});
+	block("Failed to register service worker, please reload this page or try again with a different browser.", "Error")
 	console.warn(err);
 });
 
@@ -124,7 +118,7 @@ if (shortcuts == null) {
 		},
 		{
 			name: "Y8",
-			icon: "https://www.y8.com/favicon.ico",
+			icon: "res/y8.svg",
 			link: "https://www.y8.com"
 		}
 	];
@@ -195,26 +189,43 @@ document.getElementById("clear-cache").onclick = async () => {
 		await caches.delete(keys[i]);
 };
 addShortcutButton.onclick = async () => {
-	let name = await prompt("Name");
-	if (name == null)
-		return;
+	let result = await form("", "Add shortcut", [
+		{
+			label: "Name",
+			input: {
+				type: "text",
+				placeholder: "Name"
+			}
+		},
+		{
+			label: "URL",
+			input: {
+				type: "text",
+				placeholder: "https://example.com/example"
+			}
+		}
+	]);
+
+	if (result == null)
+		return; // canceled
+
+	let name = result[0].value;
+	let url = result[1].value;
+
 	if (name.length == 0) {
-		alert("Please input a name");
+		alert("Name cannot be empty.");
 		return;
 	}
 
-	let url = await prompt("URL");
-	if (url == null)
-		return;
 	if (url.length == 0) {
-		alert("Please input a URL");
+		alert("URL cannot be empty.");
 		return;
 	}
 
 	try {
 		url = new URL(url).href;
 	} catch(e) {
-		alert("Please input a valid URL that must start with http:// or https://");
+		alert("Invalid URL. A valid URL that must start with http:// or https://");
 		return;
 	}
 
