@@ -74,7 +74,7 @@ if(!("serviceWorker" in navigator)) {
 window.navigator.serviceWorker.register("/sw.js", {
 	scope: "/",
 	type: "classic",
-	updateViaCache: "all"
+	updateViaCache: "none"
 }).catch((err) => {
 	block("Failed to register service worker, please reload this page or try again with a different browser.", "Error")
 	console.warn(err);
