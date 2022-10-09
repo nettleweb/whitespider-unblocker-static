@@ -26,10 +26,13 @@ async function fetchRe({ request }) {
 	let response = await caches.match(request);
 	if (response == null) {
 		response = await sw.fetch({ request });
-		if (response.status == 0 || request.url.startsWith(swPrefix))
-			return response;
 
-		await cache(request, response);
+		// cross-origin response
+		if (response.status == 0)
+			return response; 
+
+		if (!request.url.startsWith(swPrefix))
+			await cache(request, response);
 	}
 
 	return new Response(response.body, {

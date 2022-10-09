@@ -88,41 +88,38 @@ let shortcutContextMenu = document.getElementById("shortcut-context-menu");
 let googleSearch = "https://www.google.com/search?q=";
 let googleSearchR = "https://www.google.com/search?btnI=Im+Feeling+Lucky&q=";
 
-let shortcuts = storage.shortcuts;
-if (shortcuts == null) {
-	storage.shortcuts = shortcuts = [
-		{
-			name: "Google",
-			icon: "res/google.svg",
-			link: "https://www.google.com/"
-		},
-		{
-			name: "YouTube",
-			icon: "res/youtube.svg",
-			link: "https://www.youtube.com/"
-		},
-		{
-			name: "Facebook",
-			icon: "res/facebook.svg",
-			link: "https://www.facebook.com"
-		},
-		{
-			name: "Instagram",
-			icon: "res/instagram.svg",
-			link: "https://www.instagram.com"
-		},
-		{
-			name: "TikTok",
-			icon: "res/tiktok.svg",
-			link: "https://www.tiktok.com/"
-		},
-		{
-			name: "Y8",
-			icon: "res/y8.svg",
-			link: "https://www.y8.com"
-		}
-	];
-}
+let shortcuts = storage.getItem("shortcuts", [
+	{
+		name: "Google",
+		icon: "res/google.svg",
+		link: "https://www.google.com/"
+	},
+	{
+		name: "YouTube",
+		icon: "res/youtube.svg",
+		link: "https://www.youtube.com/"
+	},
+	{
+		name: "Facebook",
+		icon: "res/facebook.svg",
+		link: "https://www.facebook.com"
+	},
+	{
+		name: "Instagram",
+		icon: "res/instagram.svg",
+		link: "https://www.instagram.com"
+	},
+	{
+		name: "TikTok",
+		icon: "res/tiktok.svg",
+		link: "https://www.tiktok.com/"
+	},
+	{
+		name: "Y8",
+		icon: "res/y8.svg",
+		link: "https://www.y8.com"
+	}
+]);
 
 function updateShortcuts() {
 	shortcutBar.innerHTML = "";
@@ -142,7 +139,52 @@ function updateShortcuts() {
 				storage.shortcuts = shortcuts;
 				updateShortcuts();
 			};
-			document.getElementById("edit-shortcut").onclick = () => {
+			document.getElementById("edit-shortcut").onclick = async () => {
+				let result = await form("", "Edit shortcut", [
+					{
+						label: "Name",
+						input: {
+							type: "text",
+							placeholder: "Name",
+							value: s.name
+						}
+					},
+					{
+						label: "URL",
+						input: {
+							type: "text",
+							placeholder: "https://example.com/example",
+							value: s.link
+						}
+					}
+				]);
+
+				if (result == null)
+					return; // canceled
+
+				let name = result[0].value;
+				let url = result[1].value;
+
+				if (name.length == 0) {
+					alert("Name cannot be empty.");
+					return;
+				}
+
+				if (url.length == 0) {
+					alert("URL cannot be empty.");
+					return;
+				}
+
+				try {
+					url = new URL(url).href;
+				} catch(e) {
+					alert("Invalid URL. A valid URL must start with http:// or https://");
+					return;
+				}
+
+				s.name = name;
+				s.link = url;
+				updateShortcuts();
 			};
 		};
 
@@ -188,6 +230,9 @@ document.getElementById("clear-cache").onclick = async () => {
 	for (let i = 0; i < keys.length; i++)
 		await caches.delete(keys[i]);
 };
+document.getElementById("leave-without-history").onclick = () => {
+	window.location.replace(new URL("https://google.com/"));
+};
 addShortcutButton.onclick = async () => {
 	let result = await form("", "Add shortcut", [
 		{
@@ -225,7 +270,7 @@ addShortcutButton.onclick = async () => {
 	try {
 		url = new URL(url).href;
 	} catch(e) {
-		alert("Invalid URL. A valid URL that must start with http:// or https://");
+		alert("Invalid URL. A valid URL must start with http:// or https://");
 		return;
 	}
 
@@ -239,7 +284,7 @@ addShortcutButton.onclick = async () => {
 		})(),
 		link: url
 	});
-	storage.shortcuts = shortcuts;
+
 	updateShortcuts();
 };
 
@@ -254,6 +299,35 @@ document.oncontextmenu = (e) => {
 	contextMenu.style.display = "block";
 };
 document.getElementById("version").innerHTML = app.cacheVersion;
+
+document.getElementById("settings").onclick = async () => {
+	let result = await form("", "Settings", [
+		{
+			label: "Server address",
+			input: {
+				type: "text",
+				value: __uv$config.bare,
+				disabled: true
+			}
+		},
+		{
+			label: "Reduce history logging",
+			input: {
+				type: "checkbox",
+				checked: storage.getItem("reduceHistoryLogging", false)
+			}
+		},
+		{
+			label: "Note: By enabling this, the history logging caused by your browser will be reduced as the navigation-bar URL is hidden. \
+However it will not fully prevent history logging. To fully prevent history logging, leave this page with the option in the right-click menu."
+		}
+	]);
+
+	if (result == null)
+		return; // canceled
+
+	storage.reduceHistoryLogging = result[1].checked;
+};
 
 function isUrl(str) {
 	try {
@@ -287,7 +361,28 @@ function fixUrl(url, searchUrl, searchOnly) {
 }
 
 function openUrl(url) {
-	window.location = new URL(window.location.origin +  __uv$config.prefix + __uv$config.encodeUrl(url));
+	let win = storage.getItem("reduceHistoryLogging", false) ? (() => {
+		let frame = document.createElement("iframe");
+		frame.setAttribute("type", "text/plain");
+		frame.setAttribute("width", "1024");
+		frame.setAttribute("height", "768");
+		frame.setAttribute("style", "position:absolute;display:block;width:100%;height:100%;top:0px;left:0px;right:0px;bottom:0px;border:none;");
+		frame.setAttribute("scrolling", "no");
+		frame.setAttribute("loading", "eager");
+		frame.setAttribute("allowfullscreen", "true");
+		frame.setAttribute("allowtransparency", "true");
+		frame.setAttribute("fetchpriority", "high");
+		document.body.appendChild(frame);
+
+		history.pushState(void 0, "", "");
+		window.onpopstate = () => {
+			frame.remove();
+		};
+
+		return frame.contentWindow;
+	})() : window;
+
+	win.location = new URL(window.location.origin +  __uv$config.prefix + __uv$config.encodeUrl(url));
 }
 
 function run(searchUrl, searchOnly) {
