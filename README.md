@@ -17,5 +17,5 @@ This repository only contains the client-side code of the website, the server-si
 This repository is licensed under Apache-2.0 license, see `LICENSE.md` for more details.
 
 ## Libraries used
- - <a href="https://github.com/titaniumnetwork-development/Ultraviolet" target="_blank">Ultraviolet</a>
+ - <a href="https://github.com/titaniumnetwork-development/Ultraviolet" target="_blank">Ultraviolet</a> (Modified)
  - <a href="https://github.com/ruochenjia/webalert" target="_blank">webalert.js</a>
