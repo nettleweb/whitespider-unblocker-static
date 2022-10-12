@@ -6,7 +6,7 @@ importScripts("/uv/uv.bundle.js");
 
 "use strict";
 
-//(() => {
+(() => {
 
 const headers = {
 	csp: [
@@ -54,6 +54,8 @@ if (browser === 'Firefox') {
 	headers.forward.push('content-type');
 }
 
+const location = new URL(self.location.href);
+
 /**
  * @param {Response} response 
  */
@@ -80,6 +82,7 @@ class UVServiceWorker {
 	constructor(config = __uv$config) {
 		this.address = new URL(config.bare);
 		this.config = config;
+		this.prefix = location.origin + config.prefix;
 		this.browser = browser;
 		this.headers = headers;
 		this.method = method;
@@ -90,6 +93,10 @@ class UVServiceWorker {
 	 * @param {Request} request
 	 */
 	async fetch(request) {
+		if (!request.url.startsWith(this.prefix))
+			// ignore
+			return null;
+
 		const ultraviolet = new Ultraviolet(this.config);
 		const db = await ultraviolet.cookie.db();
 
@@ -242,6 +249,12 @@ class ResponseContext {
 }
 
 class RequestContext {
+	/**
+	 * @param {Request} request 
+	 * @param {UVServiceWorker} worker 
+	 * @param {*} ultraviolet
+	 * @param {*} body
+	 */
 	constructor(request, worker, ultraviolet, body = null) {
 		this.ultraviolet = ultraviolet;
 		this.request = request;
@@ -291,6 +304,12 @@ class RequestContext {
 	}
 }
 
-function isHtml(url, contentType = '') {
+/**
+ * @param {URL} url 
+ * @param {string} contentType 
+ */
+function isHtml(url, contentType) {
 	return (Ultraviolet.mime.contentType((contentType || url.pathname)) || 'text/html').split(';')[0] === 'text/html';
 }
+
+})();

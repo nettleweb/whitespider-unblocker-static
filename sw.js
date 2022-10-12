@@ -6,7 +6,6 @@ importScripts("/app.js");
 
 const cacheName =  `${self.location.hostname}-${app.cacheName}-${app.cacheVersion}`;
 const sw = new UVServiceWorker();
-const swPrefix = self.location.origin + sw.config.prefix;
 
 async function install() {
 	const cache = await caches.open(cacheName);
@@ -30,19 +29,24 @@ async function cache(request, response) {
  * @param {Request} request 
  */
 async function fetchRe(request) {
+	// lookup from caches first
 	let response = await caches.match(request);
 	if (response == null) {
-		if (request.url.startsWith(swPrefix))
-			return await sw.fetch(request);
+		// if null, fetch from uv service worker
+		response = await sw.fetch(request);
+		if (response == null) {
+			// fetch as normal
+			response = await fetch(request);
 
-		// fetch as normal
-		response = await fetch(request);
+			// cross-origin response
+			if (response.status == 0)
+				return response; 
 
-		// cross-origin response
-		if (response.status == 0)
-			return response; 
-
-		await cache(request, response);
+			await cache(request, response);
+		} else {
+			if (app.cacheUvRequests)
+				await cache(request, response);
+		}
 	}
 
 	return new Response(response.body, {
