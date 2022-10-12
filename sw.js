@@ -9,30 +9,40 @@ const sw = new UVServiceWorker();
 const swPrefix = self.location.origin + sw.config.prefix;
 
 async function install() {
-	let cache = await caches.open(cacheName);
+	const cache = await caches.open(cacheName);
 	await cache.addAll(app.cacheList);
 }
 
+/**
+ * @param {Request} request 
+ * @param {Response} response 
+ */
 async function cache(request, response) {
 	try {
-		let cache = await caches.open(cacheName);
+		const cache = await caches.open(cacheName);
 		await cache.put(request, response.clone());
 	} catch(err) {
 		// ignore - this is usually caused by an unsupported request method
 	}
 }
 
-async function fetchRe({ request }) {
+/**
+ * @param {Request} request 
+ */
+async function fetchRe(request) {
 	let response = await caches.match(request);
 	if (response == null) {
-		response = await sw.fetch({ request });
+		if (request.url.startsWith(swPrefix))
+			return await sw.fetch(request);
+
+		// fetch as normal
+		response = await fetch(request);
 
 		// cross-origin response
 		if (response.status == 0)
 			return response; 
 
-		if (!request.url.startsWith(swPrefix))
-			await cache(request, response);
+		await cache(request, response);
 	}
 
 	return new Response(response.body, {
@@ -59,7 +69,7 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-	event.respondWith(fetchRe(event));
+	event.respondWith(fetchRe(event.request));
 });
 
 self.addEventListener("activate", (event) => {
