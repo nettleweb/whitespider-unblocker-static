@@ -40,12 +40,9 @@ async function fetchRe(request) {
 
 			// cross-origin response
 			if (response.status == 0)
-				return response; 
+				return response;
 
 			await cache(request, response);
-		} else {
-			if (app.cacheUvRequests)
-				await cache(request, response);
 		}
 	}
 

@@ -1,29 +1,3 @@
-//////////////////////////////////
-
-// some extensions force refresh pages after a period of time
-// which can cause bugs with the service worker
-// therefore re-register service worker to resolve this issue
-
-(() => {
-"use strict";
-
-const nsw = window.navigator.serviceWorker;
-const tick = () => {
-    nsw.register("/sw.js", {
-        scope: "/",
-        type: "classic",
-        updateViaCache: "none"
-    });
-};
-
-// tick service worker every 30 seconds
-tick();
-setInterval(tick, 30000);
-
-})();
-
-//////////////////////////////////
-
 if (!self.__uv) {
     __uvHook(self, self.__uv$config, self.__uv$config.bare);
 };

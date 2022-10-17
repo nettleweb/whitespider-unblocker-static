@@ -1,9 +1,10 @@
 "use strict";
 
-(() => {
+(async () => {
+
 // default error handler
-window.onerror = (msg, src, lineno, colno, e) => {
-	alert(msg, "Error");
+window.onerror = (message, src, lineno, colno, error) => {
+	console.log(`Error at "${src}", line ${lineno}:${colno}: \n${error}`, "Error");
 };
 
 Array.prototype.remove = function(element) {
@@ -13,27 +14,41 @@ Array.prototype.remove = function(element) {
 	}
 };
 
-function testLocalStorage() {
+async function registerServiceWorker() {
+	const nsw = navigator.serviceWorker;
+	if (nsw == null) {
+		block("Your browser does not support service workers, please use a supported browser to continue.", "Warning");
+		return;
+	}
+
 	try {
-		localStorage.setItem("test", "___test");
-		if (localStorage.getItem("test") !== "___test")
-			throw "Value mismatch";
-		localStorage.removeItem("test");
-		return true;
-	} catch (err) {
-		return false;
+		await nsw.register("/sw.js", {
+			scope: "/",
+			type: "classic",
+			updateViaCache: "none"
+		});
+	} catch(err) {
+		console.warn(err);
+		block("Failed to register service worker, please reload this page or try again with a different browser.", "Error");
 	}
 }
 
-let storage = (() => {
-	let base;
+await registerServiceWorker();
 
-	if (testLocalStorage()) {
-		let data = localStorage.getItem("data");
-		if (data == null)
-			data = "{}";
+const storage = (() => {
+	const base = {
+		getItem: function (key, def) {
+			let item = this[key];
+			if (item == null)
+				return this[key] = def;
+			return item;
+		},
+		save: () => { }
+	};
 
-		base = JSON.parse(data);
+	try {
+		const data = localStorage.getItem("data") || "{}";
+		Object.assign(base, JSON.parse(data));
 		base.save = function () {
 			localStorage.setItem("data", JSON.stringify(this));
 		};
@@ -42,21 +57,9 @@ let storage = (() => {
 		setInterval(() => {
 			base.save();
 		}, 10000);
-	} else {
+	} catch(err) {
 		alert("Local storage is disabled by your browser, your browsing data will not be saved.", "Warning");
-		base = {
-			save: () => {
-				// stub
-			}
-		};
 	}
-
-	base.getItem = function (key, def) {
-		let item = this[key];
-		if (item == null)
-			return this[key] = def;
-		return item;
-	};
 
 	return base;
 })();
@@ -65,30 +68,14 @@ window.onbeforeunload = window.onunload = () => {
 	storage.save();
 };
 
-if(!("serviceWorker" in navigator)) {
-	// service workers are not supported
-	block("Your browser does not support service workers, please use a supported browser to continue.", "Warning");
-	return;
-}
-
-window.navigator.serviceWorker.register("/sw.js", {
-	scope: "/",
-	type: "classic",
-	updateViaCache: "none"
-}).catch((err) => {
-	block("Failed to register service worker, please reload this page or try again with a different browser.", "Error")
-	console.warn(err);
-});
-
-let urlInput = document.getElementById("input");
-let shortcutBar = document.getElementById("shortcut-bar");
-let addShortcutButton = document.getElementById("add-shortcut");
-let contextMenu = document.getElementById("context-menu");
-let shortcutContextMenu = document.getElementById("shortcut-context-menu");
-let googleSearch = "https://www.google.com/search?q=";
-let googleSearchR = "https://www.google.com/search?btnI=Im+Feeling+Lucky&q=";
-
-let shortcuts = storage.getItem("shortcuts", [
+const urlInput = document.getElementById("input");
+const shortcutBar = document.getElementById("shortcut-bar");
+const addShortcutButton = document.getElementById("add-shortcut");
+const contextMenu = document.getElementById("context-menu");
+const shortcutContextMenu = document.getElementById("shortcut-context-menu");
+const googleSearch = "https://www.google.com/search?q=";
+const googleSearchR = "https://www.google.com/search?btnI=Im+Feeling+Lucky&q=";
+const shortcuts = storage.getItem("shortcuts", [
 	{
 		name: "Google",
 		icon: "res/google.svg",
@@ -299,7 +286,6 @@ document.oncontextmenu = (e) => {
 	contextMenu.style.display = "block";
 };
 document.getElementById("version").innerHTML = app.cacheVersion;
-
 document.getElementById("settings").onclick = async () => {
 	let result = await form("", "Settings", [
 		{
@@ -316,10 +302,6 @@ document.getElementById("settings").onclick = async () => {
 				type: "checkbox",
 				checked: storage.getItem("reduceHistoryLogging", false)
 			}
-		},
-		{
-			label: "Note: By enabling this, the history logging caused by your browser will be reduced as the navigation-bar URL is hidden. \
-However it will not fully prevent history logging. To fully prevent history logging, leave this page with the option in the right-click menu."
 		}
 	]);
 
@@ -360,9 +342,12 @@ function fixUrl(url, searchUrl, searchOnly) {
 	return searchUrl + encodeURIComponent(url);
 }
 
-function openUrl(url) {
-	let win = storage.getItem("reduceHistoryLogging", false) ? (() => {
-		let frame = document.createElement("iframe");
+async function openUrl(url) {
+	// ensure service worker registered
+	await registerServiceWorker();
+
+	const win = storage.getItem("reduceHistoryLogging", false) ? (() => {
+		const frame = document.createElement("iframe");
 		frame.setAttribute("type", "text/plain");
 		frame.setAttribute("width", "1024");
 		frame.setAttribute("height", "768");
@@ -372,8 +357,8 @@ function openUrl(url) {
 		frame.setAttribute("allowfullscreen", "true");
 		frame.setAttribute("allowtransparency", "true");
 		frame.setAttribute("fetchpriority", "high");
-		document.body.appendChild(frame);
 
+		document.body.appendChild(frame);
 		history.pushState(void 0, "", "");
 		window.onpopstate = () => {
 			frame.remove();
@@ -385,11 +370,10 @@ function openUrl(url) {
 	win.location = new URL(window.location.origin +  __uv$config.prefix + __uv$config.encodeUrl(url));
 }
 
-function run(searchUrl, searchOnly) {
-	let url = fixUrl(urlInput.value, searchUrl, searchOnly);
-	openUrl(url);
+async function run(searchUrl, searchOnly) {
+	await openUrl(fixUrl(urlInput.value, searchUrl, searchOnly));
 }
 
-})();
-
-console.log("%cPage Verified", `position: relative;display: block;width: fit-content;height: fit-content;color: #ffffff;background-color: #008000;font-size: 14px;font-weight: 600;font-family: "Ubuntu Mono";font-stretch: normal;text-align: start;text-decoration: none;`);
+})().then(() => {
+	console.log("%cPage Verified", `position: relative;display: block;width: fit-content;height: fit-content;color: #ffffff;background-color: #008000;font-size: 14px;font-weight: 600;font-family: "Ubuntu Mono";font-stretch: normal;text-align: start;text-decoration: none;`);
+});

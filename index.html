@@ -10,7 +10,8 @@
 		<meta name="keywords" content="whitespider,unblock,unblocked,proxy,open-source,free,no ads,adless" />
 		<base href="/" />
 		<link rel="icon" type="image/x-icon" href="favicon.ico" />
-		<link rel="manifest" type="text/plain" href="manifest.json" />
+		<link rel="stylesheet" type="text/css" href="standard.css" />
+		<link rel="manifest" href="manifest.json" />
 		<link rel="canonical" href="https://unblocker.whitespider.gq/" />
 		<script type="text/javascript" src="lib/webalert.js"></script>
 		<script type="text/javascript" src="app.js"></script>
@@ -19,24 +20,8 @@
 @import url("standard.css");
 
 body {
+	overflow-x: hidden;
 	overflow-y: auto;
-}
-
-#noscript-screen {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	left: 0px;
-	top: 0px;
-	right: 0px;
-	bottom: 0px;
-	color: #ffffff;
-	background-color: #001a1a;
-}
-
-#noscript-screen {
-	padding: 10px;
-	box-sizing: border-box;
 }
 
 #logo {
@@ -69,14 +54,12 @@ body {
 	margin-left: auto;
 	margin-right: auto;
 	margin-bottom: 20px;
-	color: #808080;
 	line-height: 20px;
+	color: #808080;
 	font-size: 18px;
 	font-style: italic;
 	font-weight: 600;
 	text-align: end;
-	text-decoration: none;
-	user-select: none;
 }
 
 #input {
@@ -89,13 +72,17 @@ body {
 	padding-bottom: 10px;
 	padding-left: 25px;
 	padding-right: 25px;
-	outline: none;
+	line-height: 25px;
 	font-size: 16px;
+	outline: none;
 	border-style: solid;
 	border-width: 1px;
 	border-color: #808080;
 	border-radius: 25px;
-	background-color: rgba(0, 0, 0, 0);
+}
+
+#input:focus {
+	border-color: #ffffff;
 }
 
 @media all and (max-width: 512px) {
@@ -106,23 +93,6 @@ body {
 	#input {
 		width: calc(90% - 50px);
 	}
-}
-
-#settings {
-	position: absolute;
-	display: block;
-	width: 20px;
-	height: 20px;
-	right: 15px;
-	top: 15px;
-	cursor: pointer;
-	background-image: url("res/settings.svg");
-	background-size: contain;
-	background-repeat: no-repeat;
-}
-
-#input:focus {
-	border-color: #ffffff;
 }
 
 #button-bar {
@@ -141,10 +111,10 @@ body {
 	display: block;
 	width: fit-content;
 	height: fit-content;
-	padding: 10px;
-	cursor: pointer;
 	margin-left: 10px;
 	margin-right: 10px;
+	padding: 10px;
+	cursor: pointer;
 	color: #ffffff;
 	background-color: #005050;
 	user-select: none;
@@ -214,22 +184,23 @@ body {
 	height: 30px;
 	margin-top: 20px;
 	text-align: center;
-	text-overflow: ellipsis; 
+	text-overflow: ellipsis;
 	overflow: hidden;
-	line-height: 15px;
+	line-height: 14px;
 	font-size: 12px;
 }
 
-#err-msg, #noscript-msg {
-	position: relative;
+#settings {
+	position: absolute;
 	display: block;
-	width: 100%;
-	height: fit-content;
-	margin-top: 15px;
-	color: #ff8080;
-	font-size: 12px;
-	font-weight: 600;
-	text-align: center;
+	width: 20px;
+	height: 20px;
+	right: 15px;
+	top: 15px;
+	cursor: pointer;
+	background-image: url("res/settings.svg");
+	background-size: contain;
+	background-repeat: no-repeat;
 }
 
 #footer {
@@ -243,27 +214,12 @@ body {
 	font-size: 12px;
 	font-weight: 400;
 	text-align: center;
-	text-decoration: none;
 }
 
-a {
-	position: relative;
-	width: fit-content;
-	height: fit-content;
-	color: inherit;
+#footer a {
+	color: #b0b0b0;
 	cursor: pointer;
 	text-decoration: underline;
-}
-
-.text, #settings-menu input, #settings-menu label {
-	position: relative;
-	display: block;
-	width: 100%;
-	height: 18px;
-	line-height: 18px;
-	font-size: 14px;
-	text-align: start;
-	text-decoration: none;
 }
 
 .context-menu {
@@ -299,6 +255,32 @@ a {
 	color: #ffffff;
 	background-color: #002a2a;
 }
+
+#noscript-screen {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	left: 0px;
+	top: 0px;
+	right: 0px;
+	bottom: 0px;
+	padding: 10px;
+	box-sizing: border-box;
+	color: #ffffff;
+	background-color: #001a1a;
+}
+
+#noscript-text {
+	position: relative;
+	display: block;
+	width: 100%;
+	height: fit-content;
+	margin-top: 15px;
+	color: #ff8080;
+	font-size: 16px;
+	font-weight: 600;
+	text-align: center;
+}
 		</style>
 	</head>
 	<body>
@@ -307,7 +289,6 @@ a {
 			<div id="logo-text">Unblocker</div>
 			<input id="input" type="text" value="" placeholder="Search or Type a URL" />
 		</div>
-		<div id="settings"></div>
 		<div id="button-bar">
 			<div id="search-button">Unblocked Search</div>
 			<div id="random-button">I'm Feeling Lucky</div>
@@ -318,6 +299,7 @@ a {
 				<div class="shortcut-item-text">Add shortcut</div>
 			</div>
 		</div>
+		<div id="settings"></div>
 		<div id="footer">WhiteSpider Unblocker v<span id="version"></span> | Created by <a href="https://github.com/ruochenjia" target="_blank">Ruochen Jia</a> | Open source on <a href="https://github.com/ruochenjia/whitespider-unblocker" target="_blank">GitHub</a></div>
 		<div id="context-menu" class="context-menu">
 			<div id="clear-site-data">Clear site data</div>
@@ -330,7 +312,7 @@ a {
 		</div>
 		<noscript>
 			<div id="noscript-screen">
-				<div id="noscript-msg">Please enable JavaScript and refresh this page to continue.</div>
+				<div id="noscript-text">Please enable JavaScript and refresh this page to continue.</div>
 			</div>
 		</noscript>
 		<script type="text/javascript" src="uv/uv.config.js"></script>
