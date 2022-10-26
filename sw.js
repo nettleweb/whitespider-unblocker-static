@@ -1,11 +1,46 @@
 "use strict";
 
 (() => {
+
+const location = (() => {
+	// DOM Context
+	const doc = self.document;
+	if (doc != null) {
+		return new URL(doc.currentScript.src);
+	}
+
+	// Worker Context
+	return new URL(self.location.href);
+})();
+const configStr = location.searchParams.get("config");
+const mode = location.searchParams.get("mode");
+
+if (configStr == null || configStr.length == 0) {
+	throw new Error("No config specified in search params");
+}
+
+const config = JSON.parse(configStr);
+const coder=new function(){this.encode=e=>{e=function(e){if(e instanceof URL)return e.href;try{return new URL(e).href}catch(r){throw TypeError("Invalid URL: "+e)}}(e);let r=Array.from(e).map(((e,r)=>r%2?String.fromCharCode(127^e.charCodeAt(0)):e)).join("");return encodeURIComponent(r)},this.decode=e=>{let[r,...n]=e.split("?");return r=decodeURIComponent(r),Array.from(r).map(((e,r)=>r%2?String.fromCodePoint(127^e.charCodeAt(0)):e)).join("")+(n.length?"?"+n.join("?"):"")}};
+config.encodeUrl = coder.encode;
+config.decodeUrl = coder.decode;
+config.config = (() => {
+	location.searchParams.set("config", JSON.stringify(config));
+	location.searchParams.set("mode", "get");
+	return location.href;
+})();
+
+if (mode === "get") {
+	self.__uv$config = config;
+	return;
+}
+
+// SERVICE WORKER
+
 importScripts("/uv/uv.sw.js");
 importScripts("/app.js");
 
-const cacheName =  `${self.location.hostname}-${app.cacheName}-${app.cacheVersion}`;
-const sw = new UVServiceWorker();
+const sw = new UVServiceWorker(config);
+const cacheName = `${location.hostname}-${app.cacheName}-${app.cacheVersion}`;
 
 async function install() {
 	const cache = await caches.open(cacheName);
@@ -29,10 +64,8 @@ async function cache(request, response) {
  * @param {Request} request 
  */
 async function fetchRe(request) {
-	// lookup from caches first
-	let response = await caches.match(request);
+	let response = await caches.match(request, { cacheName });
 	if (response == null) {
-		// if null, fetch from uv service worker
 		response = await sw.fetch(request);
 		if (response == null) {
 			// fetch as normal

@@ -14,26 +14,11 @@ Array.prototype.remove = function(element) {
 	}
 };
 
-async function registerServiceWorker() {
-	const nsw = navigator.serviceWorker;
-	if (nsw == null) {
-		block("Your browser does not support service workers, please use a supported browser to continue.", "Warning");
-		return;
-	}
-
-	try {
-		await nsw.register("/sw.js", {
-			scope: "/",
-			type: "classic",
-			updateViaCache: "none"
-		});
-	} catch(err) {
-		console.warn(err);
-		block("Failed to register service worker, please reload this page or try again with a different browser.", "Error");
-	}
+const nsw = navigator.serviceWorker;
+if (nsw == null) {
+	block("Your browser does not support service workers, please use a supported browser to continue.", "Warning");
+	return;
 }
-
-await registerServiceWorker();
 
 const storage = (() => {
 	const base = {
@@ -107,6 +92,49 @@ const shortcuts = storage.getItem("shortcuts", [
 		link: "https://www.y8.com"
 	}
 ]);
+const config = storage.getItem("config", {
+	prefix: "/O0O000O/",
+	bare: "https://googlecom.gq/bare/",
+	bundle: "/uv/uv.bundle.js",
+	handler: "/uv/uv.handler.js",
+	sw: "/uv/uv.sw.js",
+	reduceHistoryLogging: false
+});
+const coder=new function(){this.encode=e=>{e=function(e){if(e instanceof URL)return e.href;try{return new URL(e).href}catch(r){throw TypeError("Invalid URL: "+e)}}(e);let r=Array.from(e).map(((e,r)=>r%2?String.fromCharCode(127^e.charCodeAt(0)):e)).join("");return encodeURIComponent(r)},this.decode=e=>{let[r,...n]=e.split("?");return r=decodeURIComponent(r),Array.from(r).map(((e,r)=>r%2?String.fromCodePoint(127^e.charCodeAt(0)):e)).join("")+(n.length?"?"+n.join("?"):"")}};
+config.encodeUrl = coder.encode;
+config.decodeUrl = coder.decode;
+
+async function registerServiceWorker() {
+	try {
+		await nsw.register(swUrl, {
+			scope: "/",
+			type: "classic",
+			updateViaCache: "none"
+		});
+		return await nsw.ready;
+	} catch(err) {
+		console.error(err);
+		block("Failed to register service worker, please reload this page or try again with a different browser.", "Error");
+		return null;
+	}
+}
+
+async function updateServiceWorker() {
+	const regs = await nsw.getRegistrations();
+	for (let reg of regs)
+		await reg.unregister();
+
+	await registerServiceWorker();
+}
+
+// global property
+Object.defineProperty(window, "swUrl", {
+	get: () => "/sw.js?config=" + encodeURIComponent(JSON.stringify(config))
+});
+
+// tick service every 10 seconds to ensure
+// it is registered
+setInterval(registerServiceWorker, 10000);
 
 function updateShortcuts() {
 	shortcutBar.innerHTML = "";
@@ -123,7 +151,6 @@ function updateShortcuts() {
 			shortcutContextMenu.style.display = "block";
 			document.getElementById("delete-shortcut").onclick = () => {
 				shortcuts.remove(s);
-				storage.shortcuts = shortcuts;
 				updateShortcuts();
 			};
 			document.getElementById("edit-shortcut").onclick = async () => {
@@ -217,6 +244,9 @@ document.getElementById("clear-cache").onclick = async () => {
 	for (let i = 0; i < keys.length; i++)
 		await caches.delete(keys[i]);
 };
+document.getElementById("update-service-worker").onclick = () => {
+	updateServiceWorker();
+};
 document.getElementById("leave-without-history").onclick = () => {
 	window.location.replace(new URL("https://google.com/"));
 };
@@ -287,20 +317,19 @@ document.oncontextmenu = (e) => {
 };
 document.getElementById("version").innerHTML = app.cacheVersion;
 document.getElementById("settings").onclick = async () => {
-	let result = await form("", "Settings", [
+	const result = await form("", "Settings", [
 		{
 			label: "Server address",
 			input: {
 				type: "text",
-				value: __uv$config.bare,
-				disabled: true
+				value: config.bare
 			}
 		},
 		{
 			label: "Reduce history logging",
 			input: {
 				type: "checkbox",
-				checked: storage.getItem("reduceHistoryLogging", false)
+				checked: config.reduceHistoryLogging
 			}
 		}
 	]);
@@ -308,7 +337,10 @@ document.getElementById("settings").onclick = async () => {
 	if (result == null)
 		return; // canceled
 
-	storage.reduceHistoryLogging = result[1].checked;
+	config.bare = result[0].value;
+	config.reduceHistoryLogging = result[1].checked;
+
+	await updateServiceWorker();
 };
 
 function isUrl(str) {
@@ -346,7 +378,7 @@ async function openUrl(url) {
 	// ensure service worker registered
 	await registerServiceWorker();
 
-	const win = storage.getItem("reduceHistoryLogging", false) ? (() => {
+	const win = config.reduceHistoryLogging ? (() => {
 		const frame = document.createElement("iframe");
 		frame.setAttribute("type", "text/plain");
 		frame.setAttribute("width", "1024");
@@ -367,7 +399,7 @@ async function openUrl(url) {
 		return frame.contentWindow;
 	})() : window;
 
-	win.location = new URL(window.location.origin +  __uv$config.prefix + __uv$config.encodeUrl(url));
+	win.location = new URL(window.location.origin +  config.prefix + config.encodeUrl(url));
 }
 
 async function run(searchUrl, searchOnly) {

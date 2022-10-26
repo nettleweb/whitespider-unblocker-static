@@ -1,4 +1,3 @@
-importScripts("/uv/uv.config.js");
 importScripts("/uv/uv.bundle.js");
 
 // This file has been modified from original
@@ -79,7 +78,7 @@ function getBarerResponse(response) {
 }
 
 class UVServiceWorker {
-	constructor(config = __uv$config) {
+	constructor(config) {
 		this.address = new URL(config.bare);
 		this.config = config;
 		this.prefix = location.origin + config.prefix;
@@ -169,7 +168,7 @@ class UVServiceWorker {
 			switch (request.destination) {
 				case 'script':
 				case 'worker':
-					responseCtx.body = `if (!self.__uv && self.importScripts) importScripts('${__uv$config.bundle}', '${__uv$config.config}', '${__uv$config.handler}');\n`;
+					responseCtx.body = `if (!self.__uv && self.importScripts) importScripts('${this.config.bundle}', '${this.config.config}', '${this.config.handler}');\n`;
 					responseCtx.body += ultraviolet.js.rewrite(
 						await response.text()
 					);
