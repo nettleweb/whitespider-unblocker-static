@@ -1,6 +1,6 @@
 "use strict";
 
-(async () => {
+(() => {
 
 // default error handler
 window.onerror = (message, src, lineno, colno, error) => {
@@ -98,7 +98,7 @@ const config = storage.getItem("config", {
 	bundle: "/uv/uv.bundle.js",
 	handler: "/uv/uv.handler.js",
 	sw: "/uv/uv.sw.js",
-	reduceHistoryLogging: false
+	reduceHistoryLogging: true
 });
 const coder=new function(){this.encode=e=>{e=function(e){if(e instanceof URL)return e.href;try{return new URL(e).href}catch(r){throw TypeError("Invalid URL: "+e)}}(e);let r=Array.from(e).map(((e,r)=>r%2?String.fromCharCode(127^e.charCodeAt(0)):e)).join("");return encodeURIComponent(r)},this.decode=e=>{let[r,...n]=e.split("?");return r=decodeURIComponent(r),Array.from(r).map(((e,r)=>r%2?String.fromCodePoint(127^e.charCodeAt(0)):e)).join("")+(n.length?"?"+n.join("?"):"")}};
 config.encodeUrl = coder.encode;
@@ -114,7 +114,7 @@ async function registerServiceWorker() {
 		return await nsw.ready;
 	} catch(err) {
 		console.error(err);
-		block("Failed to register service worker, please reload this page or try again with a different browser.", "Error");
+		await block("Failed to register service worker, please reload this page or try again with a different browser.", "Error");
 		return null;
 	}
 }
@@ -124,7 +124,7 @@ async function updateServiceWorker() {
 	for (let reg of regs)
 		await reg.unregister();
 
-	await registerServiceWorker();
+	return await registerServiceWorker();
 }
 
 // global property
@@ -134,7 +134,12 @@ Object.defineProperty(window, "swUrl", {
 
 // tick service every 10 seconds to ensure
 // it is registered
-setInterval(registerServiceWorker, 10000);
+const tick = setInterval(async () => {
+	const reg = await registerServiceWorker();
+	if (reg == null) {
+		clearInterval(tick);
+	}
+}, 10000);console.log("%cWhiteSpider.gq", "background-color:#001a1a;border:3px solid #008080;border-radius:10px;color:#ffffff;display:block;font-family:Ubuntu;font-size:24px;font-stretch:normal;font-style:normal;font-weight:600;height:fit-content;margin:10px;padding:10px;position:relative;text-align:start;text-decoration:none;width:fit-content");console.log("%cPage Verified", "position: relative;display: block;width: fit-content;height: fit-content;color: #ffffff;background-color: #008000;font-size: 14px;font-weight: 600;font-family: \"Ubuntu Mono\";font-stretch: normal;text-align: start;text-decoration: none;");
 
 function updateShortcuts() {
 	shortcutBar.innerHTML = "";
@@ -244,9 +249,6 @@ document.getElementById("clear-cache").onclick = async () => {
 	for (let i = 0; i < keys.length; i++)
 		await caches.delete(keys[i]);
 };
-document.getElementById("update-service-worker").onclick = () => {
-	updateServiceWorker();
-};
 document.getElementById("leave-without-history").onclick = () => {
 	window.location.replace(new URL("https://google.com/"));
 };
@@ -330,7 +332,8 @@ document.getElementById("settings").onclick = async () => {
 			input: {
 				type: "checkbox",
 				checked: config.reduceHistoryLogging
-			}
+			},
+			inline: true
 		}
 	]);
 
@@ -374,38 +377,37 @@ function fixUrl(url, searchUrl, searchOnly) {
 	return searchUrl + encodeURIComponent(url);
 }
 
+async function popup(url) {
+	const frame = document.createElement("iframe");
+	frame.setAttribute("type", "text/plain");
+	frame.setAttribute("width", "1024");
+	frame.setAttribute("height", "768");
+	frame.setAttribute("scrolling", "no");
+	frame.setAttribute("loading", "eager");
+	frame.setAttribute("allowfullscreen", "true");
+	frame.setAttribute("allowtransparency", "true");
+	frame.setAttribute("fetchpriority", "high");
+
+	await window.popup(frame, "_");
+
+	frame.contentWindow.location = url;
+}
+
 async function openUrl(url) {
 	// ensure service worker registered
-	await registerServiceWorker();
+	const reg = await registerServiceWorker();
+	if (reg == null)
+		return; // failed
 
-	const win = config.reduceHistoryLogging ? (() => {
-		const frame = document.createElement("iframe");
-		frame.setAttribute("type", "text/plain");
-		frame.setAttribute("width", "1024");
-		frame.setAttribute("height", "768");
-		frame.setAttribute("style", "position:absolute;display:block;width:100%;height:100%;top:0px;left:0px;right:0px;bottom:0px;border:none;");
-		frame.setAttribute("scrolling", "no");
-		frame.setAttribute("loading", "eager");
-		frame.setAttribute("allowfullscreen", "true");
-		frame.setAttribute("allowtransparency", "true");
-		frame.setAttribute("fetchpriority", "high");
+	const encodedUrl = new URL(window.location.origin +  config.prefix + config.encodeUrl(url));
 
-		document.body.appendChild(frame);
-		history.pushState(void 0, "", "");
-		window.onpopstate = () => {
-			frame.remove();
-		};
-
-		return frame.contentWindow;
-	})() : window;
-
-	win.location = new URL(window.location.origin +  config.prefix + config.encodeUrl(url));
+	if (config.reduceHistoryLogging)
+		await popup(encodedUrl);
+	else window.location = encodedUrl;
 }
 
 async function run(searchUrl, searchOnly) {
 	await openUrl(fixUrl(urlInput.value, searchUrl, searchOnly));
 }
 
-})().then(() => {
-	console.log("%cPage Verified", `position: relative;display: block;width: fit-content;height: fit-content;color: #ffffff;background-color: #008000;font-size: 14px;font-weight: 600;font-family: "Ubuntu Mono";font-stretch: normal;text-align: start;text-decoration: none;`);
-});
+})();
