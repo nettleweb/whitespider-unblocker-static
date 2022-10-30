@@ -1,10 +1,8 @@
-"use strict";
-
-(() => {
+import swreg from "./swreg.js";
 
 // default error handler
 window.onerror = (message, src, lineno, colno, error) => {
-	console.log(`Error at "${src}", line ${lineno}:${colno}: \n${error}`, "Error");
+	alert(`Error at "${src}", line ${lineno}:${colno}: \n${error}`, "Error");
 };
 
 Array.prototype.remove = function(element) {
@@ -13,12 +11,6 @@ Array.prototype.remove = function(element) {
 			this.splice(i, 1);
 	}
 };
-
-const nsw = navigator.serviceWorker;
-if (nsw == null) {
-	block("Your browser does not support service workers, please use a supported browser to continue.", "Warning");
-	return;
-}
 
 const storage = (() => {
 	const base = {
@@ -93,8 +85,8 @@ const shortcuts = storage.getItem("shortcuts", [
 	}
 ]);
 const config = storage.getItem("config", {
-	prefix: "/O0O000O/",
-	bare: "https://googlecom.gq/bare/",
+	prefix: "/O0OO0O/",
+	bare: "/bare/",
 	bundle: "/uv/uv.bundle.js",
 	handler: "/uv/uv.handler.js",
 	sw: "/uv/uv.sw.js",
@@ -104,42 +96,14 @@ const coder=new function(){this.encode=e=>{e=function(e){if(e instanceof URL)ret
 config.encodeUrl = coder.encode;
 config.decodeUrl = coder.decode;
 
-async function registerServiceWorker() {
-	try {
-		await nsw.register(swUrl, {
-			scope: "/",
-			type: "classic",
-			updateViaCache: "none"
-		});
-		return await nsw.ready;
-	} catch(err) {
-		console.error(err);
-		await block("Failed to register service worker, please reload this page or try again with a different browser.", "Error");
-		return null;
-	}
-}
-
-async function updateServiceWorker() {
-	const regs = await nsw.getRegistrations();
-	for (let reg of regs)
-		await reg.unregister();
-
-	return await registerServiceWorker();
-}
-
 // global property
 Object.defineProperty(window, "swUrl", {
+	configurable: false,
+	enumerable: false,
 	get: () => "/sw.js?config=" + encodeURIComponent(JSON.stringify(config))
 });
 
-// tick service every 10 seconds to ensure
-// it is registered
-const tick = setInterval(async () => {
-	const reg = await registerServiceWorker();
-	if (reg == null) {
-		clearInterval(tick);
-	}
-}, 10000);console.log("%cWhiteSpider.gq", "background-color:#001a1a;border:3px solid #008080;border-radius:10px;color:#ffffff;display:block;font-family:Ubuntu;font-size:24px;font-stretch:normal;font-style:normal;font-weight:600;height:fit-content;margin:10px;padding:10px;position:relative;text-align:start;text-decoration:none;width:fit-content");console.log("%cPage Verified", "position: relative;display: block;width: fit-content;height: fit-content;color: #ffffff;background-color: #008000;font-size: 14px;font-weight: 600;font-family: \"Ubuntu Mono\";font-stretch: normal;text-align: start;text-decoration: none;");
+swreg.tick(swUrl);
 
 function updateShortcuts() {
 	shortcutBar.innerHTML = "";
@@ -343,7 +307,7 @@ document.getElementById("settings").onclick = async () => {
 	config.bare = result[0].value;
 	config.reduceHistoryLogging = result[1].checked;
 
-	await updateServiceWorker();
+	await swreg.updateServiceWorker(swUrl);
 };
 
 function isUrl(str) {
@@ -393,14 +357,23 @@ async function popup(url) {
 	frame.contentWindow.location = url;
 }
 
+function openLockerPopup() {
+	const win = window.open("", "_blank", "popup=1,height=400,width=300,left=0,top=0");
+	if (win != null) {
+		win.focus();
+		win.location = new URL(window.location.origin + "/lock.html?swurl=" + encodeURIComponent(swUrl));
+	}
+}
+
 async function openUrl(url) {
 	// ensure service worker registered
-	const reg = await registerServiceWorker();
+	const reg = await swreg.registerServiceWorker(swUrl);
 	if (reg == null)
 		return; // failed
 
-	const encodedUrl = new URL(window.location.origin +  config.prefix + config.encodeUrl(url));
+	openLockerPopup();
 
+	const encodedUrl = new URL(window.location.origin +  config.prefix + config.encodeUrl(url));
 	if (config.reduceHistoryLogging)
 		await popup(encodedUrl);
 	else window.location = encodedUrl;
@@ -410,4 +383,4 @@ async function run(searchUrl, searchOnly) {
 	await openUrl(fixUrl(urlInput.value, searchUrl, searchOnly));
 }
 
-})();
+export const locker = { lock: () => { /*****/ console.log("%cWhiteSpider.gq", "background-color:#001a1a;border:3px solid #008080;border-radius:10px;color:#ffffff;display:block;font-family:Ubuntu;font-size:24px;font-stretch:normal;font-style:normal;font-weight:600;height:fit-content;margin:10px;padding:10px;position:relative;text-align:start;text-decoration:none;width:fit-content");console.log("%cPage Verified", "position: relative;display: block;width: fit-content;height: fit-content;color: #ffffff;background-color: #008000;font-size: 14px;font-weight: 600;font-family: \"Ubuntu Mono\";font-stretch: normal;text-align: start;text-decoration: none;"); } };

@@ -79,7 +79,7 @@ function getBarerResponse(response) {
 
 class UVServiceWorker {
 	constructor(config) {
-		this.address = new URL(config.bare);
+		this.address = new URL(config.bare, location.origin);
 		this.config = config;
 		this.prefix = location.origin + config.prefix;
 		this.browser = browser;

@@ -314,6 +314,10 @@ body {
 				<div id="noscript-text">Please enable JavaScript and refresh this page to continue.</div>
 			</div>
 		</noscript>
-		<script type="text/javascript" src="main.js"></script>
+		<script type="module">
+import { locker } from "./main.js";
+
+locker.lock();
+		</script>
 	</body>
 </html>
