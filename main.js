@@ -103,7 +103,9 @@ Object.defineProperty(window, "swUrl", {
 	get: () => "/sw.js?config=" + encodeURIComponent(JSON.stringify(config))
 });
 
-swreg.tick(swUrl);
+if (swreg != null)
+	swreg.tick(swUrl);
+// else block(...);
 
 function updateShortcuts() {
 	shortcutBar.innerHTML = "";
@@ -346,10 +348,10 @@ async function popup(url) {
 	frame.setAttribute("type", "text/plain");
 	frame.setAttribute("width", "1024");
 	frame.setAttribute("height", "768");
-	frame.setAttribute("scrolling", "no");
 	frame.setAttribute("loading", "eager");
 	frame.setAttribute("allowfullscreen", "true");
 	frame.setAttribute("allowtransparency", "true");
+	frame.setAttribute("allow", "cross-origin-isolated");
 	frame.setAttribute("fetchpriority", "high");
 
 	await window.popup(frame, "_");
