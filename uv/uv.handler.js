@@ -1127,5 +1127,3 @@ function __uvHook(window, config = {}, bare = '/bare/') {
         },
     });
 };
-
-self.__uvHook = __uvHook;
