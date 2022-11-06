@@ -218,6 +218,9 @@ document.getElementById("clear-cache").onclick = async () => {
 document.getElementById("leave-without-history").onclick = () => {
 	window.location.replace(new URL("https://google.com/"));
 };
+document.getElementById("debug-shell").onclick = () => {
+	window.inspect();
+};
 addShortcutButton.onclick = async () => {
 	let result = await form("", "Add shortcut", [
 		{
