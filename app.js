@@ -2,7 +2,7 @@
 self.app = {
 	debug: true,
 	cacheName: "whitespider-unblocker",
-	cacheVersion: "0.7.4",
+	cacheVersion: "0.8.0",
 	cacheList: [],
 	headers: {
 		"Cross-Origin-Embedder-Policy": "require-corp",

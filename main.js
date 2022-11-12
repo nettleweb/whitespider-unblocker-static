@@ -1,4 +1,6 @@
-import swreg from "./swreg.js";
+"use strict";
+
+(async () => {
 
 // default error handler
 window.onerror = (message, src, lineno, colno, error) => {
@@ -48,8 +50,11 @@ window.onbeforeunload = window.onunload = () => {
 const urlInput = document.getElementById("input");
 const shortcutBar = document.getElementById("shortcut-bar");
 const addShortcutButton = document.getElementById("add-shortcut");
+const editShortcutButton = document.getElementById("edit-shortcut");
+const deleteShortcutButton = document.getElementById("delete-shortcut");
 const contextMenu = document.getElementById("context-menu");
 const shortcutContextMenu = document.getElementById("shortcut-context-menu");
+
 const googleSearch = "https://www.google.com/search?q=";
 const googleSearchR = "https://www.google.com/search?btnI=Im+Feeling+Lucky&q=";
 const shortcuts = storage.getItem("shortcuts", [
@@ -96,36 +101,79 @@ const coder=new function(){this.encode=e=>{e=function(e){if(e instanceof URL)ret
 config.encodeUrl = coder.encode;
 config.decodeUrl = coder.decode;
 
-// global property
-Object.defineProperty(window, "swUrl", {
-	configurable: false,
-	enumerable: false,
-	get: () => "/sw.js?config=" + encodeURIComponent(JSON.stringify(config))
-});
+const swUrl = {
+	get 0() {
+		return "/sw.js?config=" + encodeURIComponent(JSON.stringify(config));
+	}
+};
 
-if (swreg != null)
-	swreg.tick(swUrl);
-// else block(...);
+const nsw = window.navigator.serviceWorker;
+if (nsw == null) {
+	await block("Your browser does not support service workers, please use a supported browser to continue.", "Warning");
+	return;
+}
+
+async function registerServiceWorker() {
+	try {
+		await nsw.register(swUrl[0], {
+			scope: "/",
+			type: "classic",
+			updateViaCache: "none"
+		});
+		return await nsw.ready;
+	} catch (err) {
+		return null;
+	}
+}
+
+async function updateServiceWorker() {
+	const regs = await nsw.getRegistrations();
+	for (let reg of regs)
+		await reg.unregister();
+
+	return await registerServiceWorker();
+}
+
+const reg = await registerServiceWorker();
+if (reg == null) {
+	await block("Failed to register service worker, please reload this page or try again with a different browser.", "Error");
+	return;
+}
+setInterval(registerServiceWorker, 10000);
 
 function updateShortcuts() {
 	shortcutBar.innerHTML = "";
-	for (let i = 0; i < shortcuts.length; i++) {
-		let s = shortcuts[i];
-		let item = document.createElement("div");
+	for (let s of shortcuts) {
+		const item = document.createElement("div");
 		item.className = "shortcut-item";
+
+		const icon = document.createElement("img");
+		icon.className = "shortcut-item-icon";
+		icon.width = 60;
+		icon.height = 60;
+		icon.src = s.icon;
+		item.appendChild(icon);
+
+		const text = document.createElement("div");
+		text.className = "shortcut-item-text";
+		text.innerHTML = s.name;
+		item.appendChild(text);
+
 		item.onclick = () => openUrl(s.link);
 		item.oncontextmenu = (e) => {
 			e.preventDefault();
 			e.stopPropagation();
+
 			shortcutContextMenu.style.top = e.clientY + "px";
 			shortcutContextMenu.style.left = e.clientX + "px";
 			shortcutContextMenu.style.display = "block";
-			document.getElementById("delete-shortcut").onclick = () => {
+
+			deleteShortcutButton.onclick = () => {
 				shortcuts.remove(s);
 				updateShortcuts();
 			};
-			document.getElementById("edit-shortcut").onclick = async () => {
-				let result = await form("", "Edit shortcut", [
+			editShortcutButton.onclick = async () => {
+				const result = await form("", "Edit shortcut", [
 					{
 						label: "Name",
 						input: {
@@ -173,18 +221,6 @@ function updateShortcuts() {
 			};
 		};
 
-		let icon = document.createElement("img");
-		icon.className = "shortcut-item-icon";
-		icon.width = 60;
-		icon.height = 60;
-		icon.src = s.icon;
-		item.appendChild(icon);
-
-		let text = document.createElement("text");
-		text.className = "shortcut-item-text";
-		text.innerHTML = s.name;
-
-		item.appendChild(text);
 		shortcutBar.appendChild(item);
 	}
 	shortcutBar.appendChild(addShortcutButton);
@@ -219,10 +255,10 @@ document.getElementById("leave-without-history").onclick = () => {
 	window.location.replace(new URL("https://google.com/"));
 };
 document.getElementById("debug-shell").onclick = () => {
-	window.inspect();
+	inspect();
 };
 addShortcutButton.onclick = async () => {
-	let result = await form("", "Add shortcut", [
+	const result = await form("", "Add shortcut", [
 		{
 			label: "Name",
 			input: {
@@ -256,7 +292,7 @@ addShortcutButton.onclick = async () => {
 	}
 
 	try {
-		url = new URL(url).href;
+		url = new URL(url);
 	} catch(e) {
 		alert("Invalid URL. A valid URL must start with http:// or https://");
 		return;
@@ -264,13 +300,8 @@ addShortcutButton.onclick = async () => {
 
 	shortcuts.push({
 		name: name,
-		icon: (() => {
-			let favicon = new URL(url);
-			favicon.pathname = "/favicon.ico";
-			favicon.search = "";
-			return favicon.href;
-		})(),
-		link: url
+		icon: new URL("/favicon.ico", url.origin).href,
+		link: url.href
 	});
 
 	updateShortcuts();
@@ -312,7 +343,7 @@ document.getElementById("settings").onclick = async () => {
 	config.bare = result[0].value;
 	config.reduceHistoryLogging = result[1].checked;
 
-	await swreg.updateServiceWorker(swUrl);
+	await updateServiceWorker();
 };
 
 function isUrl(str) {
@@ -323,14 +354,24 @@ function isUrl(str) {
 	}
 }
 
+/**
+ * @param {string} str 
+ */
 function isHostname(str) {
-	let containsSlash = str.includes("/");
-	if (containsSlash)
-		str = str.substring(0, str.indexOf("/"));
+	const slash = str.indexOf("/");
+	if (slash > 0) {
+		str = str.substring(0, slash);
+	}
+	str = str.toLowerCase();
 
-	if (/^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^(?:(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){6})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:::(?:(?:(?:[0-9a-fA-F]{1,4})):){5})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:(?:[0-9a-fA-F]{1,4})):){4})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,1}(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:(?:[0-9a-fA-F]{1,4})):){3})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,2}(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:(?:[0-9a-fA-F]{1,4})):){2})(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,3}(?:(?:[0-9a-fA-F]{1,4})))?::(?:(?:[0-9a-fA-F]{1,4})):)(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,4}(?:(?:[0-9a-fA-F]{1,4})))?::)(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9]))\.){3}(?:(?:25[0-5]|(?:[1-9]|1[0-9]|2[0-4])?[0-9])))))))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,5}(?:(?:[0-9a-fA-F]{1,4})))?::)(?:(?:[0-9a-fA-F]{1,4})))|(?:(?:(?:(?:(?:(?:[0-9a-fA-F]{1,4})):){0,6}(?:(?:[0-9a-fA-F]{1,4})))?::))))$/.test(str))
-		return containsSlash || str.includes(".");
-	return false;
+	for (let i = 0; i < str.length; i++) {
+		const ch = str.charCodeAt(i);
+		if (ch != 0x2d/*hyphen*/ && ch != 0x2e/*dot*/ && (ch < 0x30 || ch > 0x39)/*0-9*/ && (ch < 0x61 || ch > 0x7a)/*a-z*/) {
+			return false;
+		}
+	}
+
+	return slash > 0 || str.includes(".");
 }
 
 function fixUrl(url, searchUrl, searchOnly) {
@@ -346,6 +387,11 @@ function fixUrl(url, searchUrl, searchOnly) {
 	return searchUrl + encodeURIComponent(url);
 }
 
+function hideTitleAndFav() {
+	document.title = "\u2060";
+	document.querySelector("link[rel=\"icon\"]").setAttribute("href", "favicon.ico");
+}
+
 async function popup(url) {
 	const frame = document.createElement("iframe");
 	frame.setAttribute("type", "text/plain");
@@ -357,35 +403,37 @@ async function popup(url) {
 	frame.setAttribute("allow", "cross-origin-isolated");
 	frame.setAttribute("fetchpriority", "high");
 
-	await window.popup(frame, "_");
-
+	await window.popup(frame, "\u2060");
 	frame.contentWindow.location = url;
-}
-
-function openLockerPopup() {
-	const win = window.open("", "_blank", "popup=1,height=400,width=300,left=0,top=0");
-	if (win != null) {
-		win.focus();
-		win.location = new URL(window.location.origin + "/lock.html?swurl=" + encodeURIComponent(swUrl));
-	}
 }
 
 async function openUrl(url) {
 	// ensure service worker registered
-	const reg = await swreg.registerServiceWorker(swUrl);
-	if (reg == null)
+	const reg = await registerServiceWorker();
+	if (reg == null) {
+		await block("Please refresh this page.", "Error");
 		return; // failed
+	}
+	
+	hideTitleAndFav();
 
-	openLockerPopup();
-
-	const encodedUrl = new URL(window.location.origin +  config.prefix + config.encodeUrl(url));
-	if (config.reduceHistoryLogging)
+	const encodedUrl = new URL(window.location.origin + config.prefix + config.encodeUrl(url));
+	if (config.reduceHistoryLogging) {
 		await popup(encodedUrl);
-	else window.location = encodedUrl;
+		return;
+	}
+
+	const win = window.open("", "_blank");
+	win.focus();
+	win.stop();
+	win.location = encodedUrl;
 }
 
 async function run(searchUrl, searchOnly) {
 	await openUrl(fixUrl(urlInput.value, searchUrl, searchOnly));
 }
 
-export const locker = { lock: () => { /*****/ console.log("%cWhiteSpider.gq", "background-color:#001a1a;border:3px solid #008080;border-radius:10px;color:#ffffff;display:block;font-family:Ubuntu;font-size:24px;font-stretch:normal;font-style:normal;font-weight:600;height:fit-content;margin:10px;padding:10px;position:relative;text-align:start;text-decoration:none;width:fit-content");console.log("%cPage Verified", "position: relative;display: block;width: fit-content;height: fit-content;color: #ffffff;background-color: #008000;font-size: 14px;font-weight: 600;font-family: \"Ubuntu Mono\";font-stretch: normal;text-align: start;text-decoration: none;"); } };
+console.log("%cWhiteSpider.gq", "background-color:#001a1a;border:3px solid #008080;border-radius:10px;color:#ffffff;display:block;font-family:Ubuntu;font-size:24px;font-stretch:normal;font-style:normal;font-weight:600;height:fit-content;margin:10px;padding:10px;position:relative;text-align:start;text-decoration:none;width:fit-content");
+console.log("%cPage Verified", "position: relative;display: block;width: fit-content;height: fit-content;color: #ffffff;background-color: #008000;font-size: 14px;font-weight: 600;font-family: \"Ubuntu Mono\";font-stretch: normal;text-align: start;text-decoration: none;");
+
+})();

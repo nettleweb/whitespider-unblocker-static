@@ -7,22 +7,81 @@
 		<meta name="referrer" content="no-referrer" />
 		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1" />
 		<meta name="description" content="Unblock websites through a proxy server, bypass the restrictions of local network and browser extensions." />
-		<meta name="keywords" content="whitespider,unblock,unblocked,proxy,open-source,free,no ads,adless" />
+		<meta name="keywords" content="whitespider,unblocker,unblock,unblocked,proxy,open-source,free,no ads,adless" />
 		<base href="/" />
-		<link rel="icon" type="image/x-icon" href="favicon.ico" />
+		<link rel="icon" type="image/x-icon" href="favicon0.ico" />
 		<link rel="stylesheet" type="text/css" href="standard.css" />
+		<link rel="apple-touch-icon" type="image/png" href="res/logo256.png" />
 		<link rel="manifest" href="manifest.json" />
 		<link rel="canonical" href="https://unblocker.whitespider.gq/" />
 		<script type="text/javascript" src="lib/webalert.js"></script>
 		<script type="text/javascript" src="app.js"></script>
 		<title>WhiteSpider Unblocker</title>
 		<style type="text/css">
-body {
-	overflow-x: hidden;
-	overflow-y: auto;
+#header {
+	position: absolute;
+	display: block;
+	width: calc(100% - 10px);
+	height: 50px;
+	padding: 5px;
+	color: #ffffff;
+	background-color: #002a2a;
 }
 
 #logo {
+	position: absolute;
+	display: block;
+	width: 200px;
+	height: 50px;
+	cursor: pointer;
+	background-image: url("res/logo.svg");
+	background-size: contain;
+	background-repeat: no-repeat;
+}
+
+#navigation-bar {
+	position: absolute;
+	display: flex;
+	width: calc(100% - 210px);
+	height: 50px;
+	right: 5px;
+	top: 5px;
+	flex-direction: row-reverse;
+	flex-wrap: nowrap;
+}
+
+.navigation-bar-item {
+	position: relative;
+	display: block;
+	width: fit-content;
+	height: 50px;
+	line-height: 50px;
+	margin-left: 10px;
+	margin-right: 10px;
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.navigation-bar-item:hover {
+	color: #a0a0a0;
+}
+
+.navigation-bar-item:active {
+	color: #808080;
+}
+
+#content {
+	position: absolute;
+	display: block;
+	width: 100%;
+	height: calc(100% - 60px);
+	top: 60px;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+#top {
 	position: relative;
 	display: block;
 	width: 512px;
@@ -31,10 +90,11 @@ body {
 	margin-right: auto;
 	margin-top: 100px;
 	margin-bottom: 20px;
+	-webkit-user-select: none;
 	user-select: none;
 }
 
-#logo-ws {
+#large-logo {
 	position: relative;
 	display: block;
 	width: 100%;
@@ -44,7 +104,7 @@ body {
 	background-size: contain;
 }
 
-#logo-text {
+#sublogo {
 	position: relative;
 	display: block;
 	width: 75%;
@@ -102,6 +162,9 @@ body {
 	margin-right: auto;
 	margin-top: 20px;
 	margin-bottom: 50px;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	column-gap: 20px;
 }
 
 #button-bar div {
@@ -109,13 +172,10 @@ body {
 	display: block;
 	width: fit-content;
 	height: fit-content;
-	margin-left: 10px;
-	margin-right: 10px;
 	padding: 10px;
 	cursor: pointer;
 	color: #ffffff;
 	background-color: #005050;
-	user-select: none;
 	border-style: solid;
 	border-width: 1px;
 	border-radius: 25px;
@@ -123,6 +183,8 @@ body {
 	border-left-color: #00a0a0;
 	border-bottom-color: #000a0a;
 	border-right-color: #000a0a;
+	-webkit-user-select: none;
+	user-select: none;
 }
 
 #button-bar div:active {
@@ -146,59 +208,41 @@ body {
 .shortcut-item {
 	position: relative;
 	display: block;
-	width: 100px;
-	height: 100px;
-	padding: 10px;
+	width: 120px;
+	height: 120px;
 	cursor: pointer;
-	user-select: none;
-	border-style: dotted;
-	border-width: 1px;
-	border-color: rgba(0, 0, 0, 0);
 	border-radius: 25px;
 }
 
 .shortcut-item:hover {
-	border-color: #003a3a;
-	background-color: #005a5a;
+	background-color: #005050;
 }
 
 .shortcut-item:active {
-	border-color: #003a3a;
-	background-color: #005f5f;
+	background-color: #006060;
 }
 
 .shortcut-item-icon {
-	position: relative;
+	position: absolute;
 	display: block;
 	width: 50px;
 	height: 50px;
-	margin: auto;
+	left: 35px;
+	top: 10px;
 }
 
 .shortcut-item-text {
-	position: relative;
+	position: absolute;
 	display: block;
-	width: 100%;
+	width: 100px;
 	height: 30px;
-	margin-top: 20px;
+	left: 10px;
+	top: 80px;
 	text-align: center;
 	text-overflow: ellipsis;
 	overflow: hidden;
 	line-height: 14px;
 	font-size: 12px;
-}
-
-#settings {
-	position: absolute;
-	display: block;
-	width: 20px;
-	height: 20px;
-	right: 15px;
-	top: 15px;
-	cursor: pointer;
-	background-image: url("res/settings.svg");
-	background-size: contain;
-	background-repeat: no-repeat;
 }
 
 #footer {
@@ -208,14 +252,16 @@ body {
 	height: 20px;
 	line-height: 20px;
 	margin-top: 50px;
-	color: #b0b0b0;
+	margin-bottom: 50px;
+	color: #a0a0a0;
 	font-size: 12px;
 	font-weight: 400;
 	text-align: center;
+	text-decoration: none;
 }
 
 #footer a {
-	color: #b0b0b0;
+	color: #a0a0a0;
 	cursor: pointer;
 	text-decoration: underline;
 }
@@ -227,9 +273,9 @@ body {
 	height: fit-content;
 	border-style: solid;
 	border-width: 1px;
-	border-color: #ffffff;
+	border-color: #808080;
 	color: #303030;
-	background-color: #f0f0f0;
+	background-color: #ffffff;
 }
 
 .context-menu div {
@@ -241,6 +287,7 @@ body {
 	font-size: 14px;
 	font-weight: 500;
 	cursor: pointer;
+	-webkit-user-select: none;
 	user-select: none;
 }
 
@@ -282,23 +329,33 @@ body {
 		</style>
 	</head>
 	<body>
-		<div id="logo">
-			<a id="logo-ws" href="https://whitespider.gq" target="_blank"></a>
-			<div id="logo-text">Unblocker</div>
-			<input id="input" type="text" value="" placeholder="Search or Type a URL" />
-		</div>
-		<div id="button-bar">
-			<div id="search-button">Unblocked Search</div>
-			<div id="random-button">I'm Feeling Lucky</div>
-		</div>
-		<div id="shortcut-bar">
-			<div id="add-shortcut" class="shortcut-item">
-				<img class="shortcut-item-icon" width="60" height="60" src="res/add.svg" />
-				<div class="shortcut-item-text">Add shortcut</div>
+		<div id="header">
+			<a id="logo" href="https://whitespider.gq" target="_blank" rel="noopener"></a>
+			<div id="navigation-bar">
+				<div id="settings" class="navigation-bar-item">Settings</div>
+				<a class="navigation-bar-item" href="https://discord.gg/MWCNr2ANEz" target="_blank" rel="noopener">Discord</a>
+				<a class="navigation-bar-item" href="https://github.com/ruochenjia/whitespider-unblocker" target="_blank" rel="noopener">GitHub</a>
+				<a class="navigation-bar-item" href="https://sites.google.com/view/wsug-mirrors" target="_blank" rel="noopener">Mirror Links</a>
 			</div>
 		</div>
-		<div id="settings"></div>
-		<div id="footer">WhiteSpider Unblocker v<span id="version"></span> | Created by <a href="https://github.com/ruochenjia" target="_blank">Ruochen Jia</a> | Open source on <a href="https://github.com/ruochenjia/whitespider-unblocker" target="_blank">GitHub</a></div>
+		<div id="content">
+			<div id="top">
+				<div id="large-logo"></div>
+				<div id="sublogo">Unblocker</div>
+				<input id="input" type="text" placeholder="Search or Type a URL" />
+			</div>
+			<div id="button-bar">
+				<div id="search-button">Unblocked Search</div>
+				<div id="random-button">I'm Feeling Lucky</div>
+			</div>
+			<div id="shortcut-bar">
+				<div id="add-shortcut" class="shortcut-item">
+					<img class="shortcut-item-icon" width="50" height="50" src="res/add.svg" />
+					<div class="shortcut-item-text">Add shortcut</div>
+				</div>
+			</div>
+			<div id="footer">WhiteSpider Unblocker v<span id="version"></span> | Open source on <a href="https://github.com/ruochenjia/whitespider-unblocker" target="_blank" rel="noopener">GitHub</a></div>
+		</div>
 		<div id="context-menu" class="context-menu">
 			<div id="clear-site-data">Clear site data</div>
 			<div id="clear-cache">Clear cache</div>
@@ -314,10 +371,6 @@ body {
 				<div id="noscript-text">Please enable JavaScript and refresh this page to continue.</div>
 			</div>
 		</noscript>
-		<script type="module">
-import { locker } from "./main.js";
-
-locker.lock();
-		</script>
+		<script type="text/javascript" src="main.js"></script>
 	</body>
 </html>
