@@ -95,7 +95,7 @@ const config = storage.getItem("config", {
 	bundle: "/uv/uv.bundle.js",
 	handler: "/uv/uv.handler.js",
 	sw: "/uv/uv.sw.js",
-	reduceHistoryLogging: true
+	reduceHistoryLogging: false
 });
 const coder=new function(){this.encode=e=>{e=function(e){if(e instanceof URL)return e.href;try{return new URL(e).href}catch(r){throw TypeError("Invalid URL: "+e)}}(e);let r=Array.from(e).map(((e,r)=>r%2?String.fromCharCode(127^e.charCodeAt(0)):e)).join("");return encodeURIComponent(r)},this.decode=e=>{let[r,...n]=e.split("?");return r=decodeURIComponent(r),Array.from(r).map(((e,r)=>r%2?String.fromCodePoint(127^e.charCodeAt(0)):e)).join("")+(n.length?"?"+n.join("?"):"")}};
 config.encodeUrl = coder.encode;
@@ -140,6 +140,20 @@ if (reg == null) {
 	return;
 }
 setInterval(registerServiceWorker, 10000);
+
+const location = new URL(window.location.href);
+const from = location.searchParams.get("from");
+if (from != null) {
+	try {
+		const url = new URL(from);
+		if (url.pathname.startsWith(config.prefix)) {
+			window.location.replace(url);
+			return;
+		}
+	} catch(err) {
+		// ignore
+	}
+}
 
 function updateShortcuts() {
 	shortcutBar.innerHTML = "";
@@ -417,7 +431,7 @@ async function openUrl(url) {
 	
 	hideTitleAndFav();
 
-	const encodedUrl = new URL(window.location.origin + config.prefix + config.encodeUrl(url));
+	const encodedUrl = new URL(location.origin + config.prefix + config.encodeUrl(url));
 	if (config.reduceHistoryLogging) {
 		await popup(encodedUrl);
 		return;
