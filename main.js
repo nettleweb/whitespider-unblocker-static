@@ -396,7 +396,7 @@ function fixUrl(url, searchUrl, searchOnly) {
 	if (isUrl(url))
 		return url;
 	if (isHostname(url))
-		return "https://" + url;
+		return "http://" + url;
 
 	return searchUrl + encodeURIComponent(url);
 }
