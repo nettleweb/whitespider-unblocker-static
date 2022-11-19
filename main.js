@@ -20,6 +20,7 @@ const tomcatScreen = document.getElementById("tomcat-screen");
 const backButton = document.getElementById("back");
 const forwardButton = document.getElementById("forward");
 const refreshButton = document.getElementById("refresh");
+const addressBar = document.getElementById("address-bar");
 const frame = document.getElementById("frame");
 const input = document.getElementById("c");
 
@@ -131,6 +132,12 @@ async function openUrl(url) {
 	backButton.onclick = () => socket.emit("goback");
 	forwardButton.onclick = () => socket.emit("goforward");
 	refreshButton.onclick = () => socket.emit("refresh");
+	addressBar.onkeydown = (e) => {
+		if (e.keyCode == 13) {
+			e.preventDefault();
+			socket.emit("navigate", fixUrl(addressBar.value, googleSearch, false));
+		}
+	};
 
 	////////////////////////////
 	// Event Listeners
@@ -236,8 +243,8 @@ async function openUrl(url) {
 
 		socket.emit("sync");
 
-		const buf = await new Promise(resolve => socket.on("buffer", resolve));
-		const blob = new Blob([buf], { type: "image/jpeg", endings: "native" });
+		const data = await new Promise(resolve => socket.on("data", resolve));
+		const blob = new Blob([data.buf], { type: "image/jpeg", endings: "native" });
 
 		const prev = frame.src;
 		if (prev.length > 0) {
@@ -246,8 +253,10 @@ async function openUrl(url) {
 		frame.src = URL.createObjectURL(blob);
 
 		const active = document.activeElement;
-		if (active == null || active == document.body) {
-			input.focus({ preventScroll: true });
+		if (active != addressBar) {
+			if (active == null || active == document.body)
+				input.focus({ preventScroll: true });
+			addressBar.value = data.url;
 		}
 
 		// wait before next frame
