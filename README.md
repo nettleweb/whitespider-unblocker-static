@@ -5,3 +5,6 @@ Link to website: https://unblocker.whitespider.gq <br />
 Alternative link: https://unblocker.ruochenjia.repl.co <br />
 
 <b>Click <a href="https://github.com/ruochenjia/whitespider-unblocker" target="_blank">here</a> to get more details about this project.</b>
+
+## License
+This repository is licensed under GPL-3.0 license, see `LICENSE.md` for more details.
