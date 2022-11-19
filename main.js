@@ -14,6 +14,268 @@ Array.prototype.remove = function(element) {
 	}
 };
 
+const backgroundScreen = document.getElementById("background-screen");
+const homeScreen = document.getElementById("home-screen");
+const tomcatScreen = document.getElementById("tomcat-screen");
+const backButton = document.getElementById("back");
+const forwardButton = document.getElementById("forward");
+const refreshButton = document.getElementById("refresh");
+const frame = document.getElementById("frame");
+const input = document.getElementById("c");
+
+// const nsw = window.navigator.serviceWorker;
+// if (nsw != null) {
+// 	await nsw.register("/sw.js", {
+// 		scope: "/",
+// 		type: "classic",
+// 		updateViaCache: "none"
+// 	});
+// 	await nsw.ready;
+// }
+
+let frameKilled = false;
+
+/**
+ * @param {string} str 
+ */
+function isUrl(str) {
+	try {
+		return new URL(str).href;
+	} catch(err) {
+		return null;
+	}
+}
+
+/**
+ * @param {string} str 
+ */
+function isHostname(str) {
+	const slash = str.indexOf("/");
+	if (slash > 0) {
+		str = str.substring(0, slash);
+	}
+	str = str.toLowerCase();
+
+	for (let i = 0; i < str.length; i++) {
+		const ch = str.charCodeAt(i);
+		if (ch != 0x2d/*hyphen*/ && ch != 0x2e/*dot*/ && (ch < 0x30 || ch > 0x39)/*0-9*/ && (ch < 0x61 || ch > 0x7a)/*a-z*/) {
+			return false;
+		}
+	}
+
+	return slash > 0 || str.includes(".");
+}
+
+/**
+ * @param {string} url 
+ * @param {string} searchUrl 
+ * @param {boolean} searchOnly 
+ */
+function fixUrl(url, searchUrl, searchOnly) {
+	url = url.replace(/^\s+|\s+$/gm, "");
+
+	if (searchOnly)
+		return searchUrl + encodeURIComponent(url);
+	if (isUrl(url))
+		return url;
+	if (isHostname(url))
+		return "http://" + url;
+
+	return searchUrl + encodeURIComponent(url);
+}
+
+function hideTitleAndFav() {
+	document.title = "\u2060";
+	document.querySelector("link[rel=\"icon\"]").setAttribute("href", "favicon.ico");
+}
+
+/**
+ * @param {string} searchUrl 
+ * @param {boolean} searchOnly 
+ */
+async function run(searchUrl, searchOnly) {
+	await openUrl(fixUrl(urlInput.value, searchUrl, searchOnly));
+}
+
+/**
+ * @param {string} url 
+ */
+async function openUrl(url) {
+	hideTitleAndFav();
+	backgroundScreen.style.display = "none";
+	homeScreen.style.display = "none";
+	tomcatScreen.style.display = "block";
+
+	// check dimension
+	frame.width = 1280;
+	frame.height = 720;
+	if (frame.clientWidth != 1280 || frame.clientHeight != 720) {
+		frame.setAttribute("style", "width:1280px;height:720px;min-width:1280px;min-height:720px;max-width:1280px;max-height:720px;");
+	}
+
+	////////////////////////////
+	// INIT
+	////////////////////////////
+
+	// connect to server
+	const socket = io();
+	await new Promise(resolve => socket.on("connected", resolve));
+	socket.emit("new_session");
+	await new Promise(resolve => socket.on("session_id", resolve));
+
+	// setup input proxy element
+	input.autofocus = true;
+	input.focus({ preventScroll: true });
+
+	// setup navigation elements
+	backButton.onclick = () => socket.emit("goback");
+	forwardButton.onclick = () => socket.emit("goforward");
+	refreshButton.onclick = () => socket.emit("refresh");
+
+	////////////////////////////
+	// Event Listeners
+	////////////////////////////
+
+	// mouse button names, used in server side
+	const buttons = [
+		"left",
+		"middle",
+		"right",
+		"back",
+		"forward"
+	];
+
+	/**
+	 * @param {MouseEvent} e 
+	 */
+	function mouseEventHandler(e) {
+		// prevent default and override
+		e.preventDefault();
+		e.stopPropagation();
+		e.returnValue = false;
+
+		socket.emit("mouseevent", {
+			type: e.type,
+			x: e.offsetX,
+			y: e.offsetY,
+			button: buttons[e.button]
+		});
+
+		return false;
+	}
+
+	/**
+	 * @param {WheelEvent} e 
+	 */
+	function wheelEventHandler(e) {
+		e.preventDefault();
+		e.stopPropagation();
+		e.returnValue = false;
+
+		socket.emit("wheelevent", {
+			type: e.type,
+			deltaX: e.deltaX,
+			deltaY: e.deltaY
+		});
+
+		return false;
+	}
+
+	/**
+	 * @param {KeyboardEvent} e 
+	 */
+	function keyboardEventHandler(e) {
+		e.preventDefault();
+		e.stopPropagation();
+		e.returnValue = false;
+
+		socket.emit("keyboardevent", {
+			type: e.type,
+			key: e.key
+		});
+
+		return false;
+	}
+
+	/**
+	 * @param {InputEvent} e 
+	 */
+	function inputEventHandler(e) {
+		e.preventDefault();
+		e.stopPropagation();
+		e.returnValue = false;
+
+		socket.emit("inputevent", {
+			type: e.type,
+			data: e.data
+		});
+
+		return false;
+	}
+
+	const options = { capture: false, passive: false, once: false };
+	frame.addEventListener("click", mouseEventHandler, options);
+	frame.addEventListener("contextmenu", mouseEventHandler, options);
+	frame.addEventListener("mousedown", mouseEventHandler, options);
+	frame.addEventListener("mouseup", mouseEventHandler, options);
+	frame.addEventListener("mousemove", mouseEventHandler, options);
+	frame.addEventListener("wheel", wheelEventHandler, options);
+	input.addEventListener("keydown", keyboardEventHandler, options);
+	input.addEventListener("keyup", keyboardEventHandler, options);
+	input.addEventListener("input", inputEventHandler, options);
+
+	////////////////////////////
+	// Main loop / update
+	////////////////////////////
+
+	async function loop() {
+		if (frameKilled) {
+			socket.disconnect();
+			return;
+		}
+
+		socket.emit("sync");
+
+		const buf = await new Promise(resolve => socket.on("buffer", resolve));
+		const blob = new Blob([buf], { type: "image/jpeg", endings: "native" });
+
+		const prev = frame.src;
+		if (prev.length > 0) {
+			URL.revokeObjectURL(prev);
+		}
+		frame.src = URL.createObjectURL(blob);
+
+		const active = document.activeElement;
+		if (active == null || active == document.body) {
+			input.focus({ preventScroll: true });
+		}
+
+		// wait before next frame
+		await new Promise(resolve => setTimeout(resolve, 100));
+		requestAnimationFrame(loop);
+	}
+
+	socket.emit("navigate", url);
+	frameKilled = false;
+	await loop();
+}
+
+document.getElementById("home").onclick = () => {
+	frameKilled = true;
+	tomcatScreen.style.display = "none";
+	homeScreen.style.display = "block";
+};
+
+const location = new URL(window.location.href);
+const open = location.searchParams.get("open");
+if (open != null && isUrl(open)) {
+	await openUrl(open);
+	return;
+}
+
+backgroundScreen.style.display = "none";
+homeScreen.style.display = "block";
+
 const storage = (() => {
 	const base = {
 		getItem: function (key, def) {
@@ -89,71 +351,6 @@ const shortcuts = storage.getItem("shortcuts", [
 		link: "https://www.y8.com"
 	}
 ]);
-const config = storage.getItem("config", {
-	prefix: "/O0OO0O/",
-	bare: "/bare/",
-	bundle: "/uv/uv.bundle.js",
-	handler: "/uv/uv.handler.js",
-	sw: "/uv/uv.sw.js",
-	reduceHistoryLogging: false
-});
-const coder=new function(){this.encode=e=>{e=function(e){if(e instanceof URL)return e.href;try{return new URL(e).href}catch(r){throw TypeError("Invalid URL: "+e)}}(e);let r=Array.from(e).map(((e,r)=>r%2?String.fromCharCode(127^e.charCodeAt(0)):e)).join("");return encodeURIComponent(r)},this.decode=e=>{let[r,...n]=e.split("?");return r=decodeURIComponent(r),Array.from(r).map(((e,r)=>r%2?String.fromCodePoint(127^e.charCodeAt(0)):e)).join("")+(n.length?"?"+n.join("?"):"")}};
-config.encodeUrl = coder.encode;
-config.decodeUrl = coder.decode;
-
-const swUrl = {
-	get 0() {
-		return "/sw.js?config=" + encodeURIComponent(JSON.stringify(config));
-	}
-};
-
-const nsw = window.navigator.serviceWorker;
-if (nsw == null) {
-	await block("Your browser does not support service workers, please use a supported browser to continue.", "Warning");
-	return;
-}
-
-async function registerServiceWorker() {
-	try {
-		await nsw.register(swUrl[0], {
-			scope: "/",
-			type: "classic",
-			updateViaCache: "none"
-		});
-		return await nsw.ready;
-	} catch (err) {
-		return null;
-	}
-}
-
-async function updateServiceWorker() {
-	const regs = await nsw.getRegistrations();
-	for (let reg of regs)
-		await reg.unregister();
-
-	return await registerServiceWorker();
-}
-
-const reg = await registerServiceWorker();
-if (reg == null) {
-	await block("Failed to register service worker, please reload this page or try again with a different browser.", "Error");
-	return;
-}
-setInterval(registerServiceWorker, 10000);
-
-const location = new URL(window.location.href);
-const from = location.searchParams.get("from");
-if (from != null) {
-	try {
-		const url = new URL(from);
-		if (url.pathname.startsWith(config.prefix)) {
-			window.location.replace(url);
-			return;
-		}
-	} catch(err) {
-		// ignore
-	}
-}
 
 function updateShortcuts() {
 	shortcutBar.innerHTML = "";
@@ -332,122 +529,7 @@ document.oncontextmenu = (e) => {
 	contextMenu.style.display = "block";
 };
 document.getElementById("version").innerHTML = app.cacheVersion;
-document.getElementById("settings").onclick = async () => {
-	const result = await form("", "Settings", [
-		{
-			label: "Server address",
-			input: {
-				type: "text",
-				value: config.bare
-			}
-		},
-		{
-			label: "Reduce history logging",
-			input: {
-				type: "checkbox",
-				checked: config.reduceHistoryLogging
-			},
-			inline: true
-		}
-	]);
 
-	if (result == null)
-		return; // canceled
-
-	config.bare = result[0].value;
-	config.reduceHistoryLogging = result[1].checked;
-
-	await updateServiceWorker();
-};
-
-function isUrl(str) {
-	try {
-		return new URL(str).href;
-	} catch(err) {
-		return null;
-	}
-}
-
-/**
- * @param {string} str 
- */
-function isHostname(str) {
-	const slash = str.indexOf("/");
-	if (slash > 0) {
-		str = str.substring(0, slash);
-	}
-	str = str.toLowerCase();
-
-	for (let i = 0; i < str.length; i++) {
-		const ch = str.charCodeAt(i);
-		if (ch != 0x2d/*hyphen*/ && ch != 0x2e/*dot*/ && (ch < 0x30 || ch > 0x39)/*0-9*/ && (ch < 0x61 || ch > 0x7a)/*a-z*/) {
-			return false;
-		}
-	}
-
-	return slash > 0 || str.includes(".");
-}
-
-function fixUrl(url, searchUrl, searchOnly) {
-	url = url.replace(/^\s+|\s+$/gm, "");
-
-	if (searchOnly)
-		return searchUrl + encodeURIComponent(url);
-	if (isUrl(url))
-		return url;
-	if (isHostname(url))
-		return "http://" + url;
-
-	return searchUrl + encodeURIComponent(url);
-}
-
-function hideTitleAndFav() {
-	document.title = "\u2060";
-	document.querySelector("link[rel=\"icon\"]").setAttribute("href", "favicon.ico");
-}
-
-async function popup(url) {
-	const frame = document.createElement("iframe");
-	frame.setAttribute("type", "text/plain");
-	frame.setAttribute("width", "1024");
-	frame.setAttribute("height", "768");
-	frame.setAttribute("loading", "eager");
-	frame.setAttribute("allowfullscreen", "true");
-	frame.setAttribute("allowtransparency", "true");
-	frame.setAttribute("allow", "cross-origin-isolated");
-	frame.setAttribute("fetchpriority", "high");
-
-	await window.popup(frame, "\u2060");
-	frame.contentWindow.location = url;
-}
-
-async function openUrl(url) {
-	// ensure service worker registered
-	const reg = await registerServiceWorker();
-	if (reg == null) {
-		await block("Please refresh this page.", "Error");
-		return; // failed
-	}
-	
-	hideTitleAndFav();
-
-	const encodedUrl = new URL(location.origin + config.prefix + config.encodeUrl(url));
-	if (config.reduceHistoryLogging) {
-		await popup(encodedUrl);
-		return;
-	}
-
-	const win = window.open("", "_blank");
-	win.focus();
-	win.stop();
-	win.location = encodedUrl;
-}
-
-async function run(searchUrl, searchOnly) {
-	await openUrl(fixUrl(urlInput.value, searchUrl, searchOnly));
-}
-
-console.log("%cWhiteSpider.gq", "background-color:#001a1a;border:3px solid #008080;border-radius:10px;color:#ffffff;display:block;font-family:Ubuntu;font-size:24px;font-stretch:normal;font-style:normal;font-weight:600;height:fit-content;margin:10px;padding:10px;position:relative;text-align:start;text-decoration:none;width:fit-content");
-console.log("%cPage Verified", "position: relative;display: block;width: fit-content;height: fit-content;color: #ffffff;background-color: #008000;font-size: 14px;font-weight: 600;font-family: \"Ubuntu Mono\";font-stretch: normal;text-align: start;text-decoration: none;");
+eval(`console.log("%cWhiteSpider.gq", "background-color:#001a1a;border:3px solid #008080;border-radius:10px;color:#ffffff;display:block;font-family:Ubuntu;font-size:24px;font-stretch:normal;font-style:normal;font-weight:600;height:fit-content;margin:10px;padding:10px;position:relative;text-align:start;text-decoration:none;width:fit-content");console.log("%cPage Verified", "position: relative;display: block;width: fit-content;height: fit-content;color: #ffffff;background-color: #008000;font-size: 14px;font-weight: 600;font-family: \\"Ubuntu Mono\\";font-stretch: normal;text-align: start;text-decoration: none;");`);
 
 })();

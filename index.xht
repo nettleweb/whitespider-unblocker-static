@@ -2,11 +2,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
-		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-		<meta http-equiv="Referrer-Policy" content="no-referrer" />
-		<meta name="referrer" content="no-referrer" />
+		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1" />
-		<meta name="description" content="Unblock websites through a proxy server, bypass the restrictions of local network and browser extensions." />
+		<meta name="description" content="Unblocker based on Tomcat. Unblock websites through a proxy server, bypass the restrictions of local network and browser extensions." />
 		<meta name="keywords" content="whitespider,unblocker,unblock,unblocked,proxy,open-source,free,no ads,adless" />
 		<base href="/" />
 		<link rel="icon" type="image/x-icon" href="favicon0.ico" />
@@ -14,10 +12,35 @@
 		<link rel="apple-touch-icon" type="image/png" href="res/logo256.png" />
 		<link rel="manifest" href="manifest.json" />
 		<link rel="canonical" href="https://unblocker.whitespider.gq/" />
+		<script type="text/javascript" src="lib/socket.io.min.js"></script>
 		<script type="text/javascript" src="lib/webalert.js"></script>
 		<script type="text/javascript" src="app.js"></script>
 		<title>WhiteSpider Unblocker</title>
 		<style type="text/css">
+.screen {
+	position: absolute;
+	display: block;
+	width: 100%;
+	height: 100%;
+	left: 0px;
+	top: 0px;
+	overflow: hidden;
+}
+
+#loading-text {
+	position: relative;
+	display: block;
+	width: fit-content;
+	height: fit-content;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 20px;
+}
+
+#home-screen {
+	display: none;
+}
+
 #header {
 	position: absolute;
 	display: block;
@@ -266,6 +289,99 @@
 	text-decoration: underline;
 }
 
+#tomcat-screen {
+	display: none;
+	color: #303030;
+	background-color: #ffffff;
+}
+
+#toolbar {
+	position: relative;
+	display: block;
+	width: 100%;
+	height: 40px;
+	-webkit-user-select: none;
+	user-select: none;
+	border-bottom-style: solid;
+	border-bottom-width: 1px;
+	border-bottom-color: #e0e0e0;
+}
+
+#toolbar img {
+	position: absolute;
+	display: block;
+	width: 24px;
+	height: 24px;
+	padding: 4px;
+	top: 4px;
+	cursor: pointer;
+	border-radius: 25px;
+}
+
+#toolbar img:hover {
+	background-color: #f0f0f0;
+}
+
+#toolbar img:active {
+	background-color: #e0e0e0;
+}
+
+
+#back {
+	left: 4px;
+}
+
+#forward {
+	left: 40px;
+}
+
+#refresh {
+	left: 80px;
+}
+
+#home {
+	left: 120px;
+}
+
+#address-bar {
+	position: absolute;
+	display: block;
+	width: calc(100% - 206px);
+	height: 34px;
+	top: 2px;
+	left: 160px;
+	padding-left: 20px;
+	padding-right: 20px;
+	outline: none;
+	line-height: 34px;
+	border-style: solid;
+	border-width: 1px;
+	border-color: #808080;
+	border-radius: 25px;
+}
+
+#frame {
+	position: relative;
+	display: block;
+	width: 1280px;
+	height: 720px;
+	margin: auto;
+	-webkit-user-drag: none;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+#c {
+	position: relative;
+	display: block;
+	width: 1280px;
+	height: 24px;
+	margin: auto;
+	line-height: 24px;
+	outline: none;
+	border: none;
+}
+
 .context-menu {
 	position: absolute;
 	display: none;
@@ -302,15 +418,6 @@
 }
 
 #noscript-screen {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	left: 0px;
-	top: 0px;
-	right: 0px;
-	bottom: 0px;
-	padding: 10px;
-	box-sizing: border-box;
 	color: #ffffff;
 	background-color: #001a1a;
 }
@@ -318,43 +425,60 @@
 #noscript-text {
 	position: relative;
 	display: block;
-	width: 100%;
+	width: fit-content;
 	height: fit-content;
-	margin-top: 15px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 20px;
 	color: #ff8080;
 	font-size: 16px;
 	font-weight: 600;
-	text-align: center;
 }
 		</style>
 	</head>
 	<body>
-		<div id="header">
-			<a id="logo" href="https://whitespider.gq" target="_blank" rel="noopener"></a>
-			<div id="navigation-bar">
-				<div id="settings" class="navigation-bar-item">Settings</div>
-				<a class="navigation-bar-item" href="https://discord.gg/MWCNr2ANEz" target="_blank" rel="noopener">Discord</a>
-				<a class="navigation-bar-item" href="https://github.com/ruochenjia/whitespider-unblocker" target="_blank" rel="noopener">GitHub</a>
-				<a class="navigation-bar-item" href="https://sites.google.com/view/wsug-mirrors" target="_blank" rel="noopener">Mirror Links</a>
-			</div>
+		<div id="background-screen" class="screen">
+			<div id="loading-text">Loading...</div>
 		</div>
-		<div id="content">
-			<div id="top">
-				<div id="large-logo"></div>
-				<div id="sublogo">Unblocker</div>
-				<input id="input" type="text" placeholder="Search or Type a URL" />
-			</div>
-			<div id="button-bar">
-				<div id="search-button">Unblocked Search</div>
-				<div id="random-button">I'm Feeling Lucky</div>
-			</div>
-			<div id="shortcut-bar">
-				<div id="add-shortcut" class="shortcut-item">
-					<img class="shortcut-item-icon" width="50" height="50" src="res/add.svg" />
-					<div class="shortcut-item-text">Add shortcut</div>
+		<div id="home-screen" class="screen">
+			<div id="header">
+				<a id="logo" href="https://whitespider.gq" target="_blank" rel="noopener"></a>
+				<div id="navigation-bar">
+					<div id="settings" class="navigation-bar-item">Settings</div>
+					<a class="navigation-bar-item" href="https://discord.gg/MWCNr2ANEz" target="_blank" rel="noopener">Discord</a>
+					<a class="navigation-bar-item" href="https://github.com/ruochenjia/whitespider-unblocker" target="_blank" rel="noopener">GitHub</a>
+					<a class="navigation-bar-item" href="https://sites.google.com/view/wsug-mirrors" target="_blank" rel="noopener">Mirror Links</a>
 				</div>
 			</div>
-			<div id="footer">WhiteSpider Unblocker v<span id="version"></span> | Open source on <a href="https://github.com/ruochenjia/whitespider-unblocker" target="_blank" rel="noopener">GitHub</a></div>
+			<div id="content">
+				<div id="top">
+					<div id="large-logo"></div>
+					<div id="sublogo">Unblocker</div>
+					<input id="input" type="text" placeholder="Search or Type a URL" />
+				</div>
+				<div id="button-bar">
+					<div id="search-button">Unblocked Search</div>
+					<div id="random-button">I'm Feeling Lucky</div>
+				</div>
+				<div id="shortcut-bar">
+					<div id="add-shortcut" class="shortcut-item">
+						<img class="shortcut-item-icon" width="50" height="50" src="res/add.svg" alt="Add shortcut" />
+						<div class="shortcut-item-text">Add shortcut</div>
+					</div>
+				</div>
+				<div id="footer">WhiteSpider Unblocker v<span id="version"></span> | Open source on <a href="https://github.com/ruochenjia/whitespider-unblocker" target="_blank" rel="noopener">GitHub</a></div>
+			</div>
+		</div>
+		<div id="tomcat-screen" class="screen">
+			<div id="toolbar">
+				<img id="back" src="res/back.svg" width="24" height="24" title="Back" />
+				<img id="forward" src="res/forward.svg" width="24" height="24" title="Forward" />
+				<img id="refresh" src="res/refresh.svg" width="24" height="24" title="Refresh" />
+				<img id="home" src="res/home.svg" width="24" height="24" title="Home" />
+				<input id="address-bar" type="text" value="" placeholder="Search or Type a URL" />
+			</div>
+			<img id="frame" width="1280" height="720" alt="Loading Frame..." />
+			<input id="c" type="text" value="" placeholder="Click here to activate input" />
 		</div>
 		<div id="context-menu" class="context-menu">
 			<div id="clear-site-data">Clear site data</div>
@@ -367,7 +491,7 @@
 			<div id="delete-shortcut">Delete</div>
 		</div>
 		<noscript>
-			<div id="noscript-screen">
+			<div id="noscript-screen" class="screen">
 				<div id="noscript-text">Please enable JavaScript and refresh this page to continue.</div>
 			</div>
 		</noscript>
