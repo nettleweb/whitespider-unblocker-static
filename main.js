@@ -261,7 +261,7 @@ async function openUrl(url) {
 		if (active != addressBar) {
 			if (active == null || active == document.body)
 				input.focus({ preventScroll: true });
-			addressBar.value = url;
+			addressBar.value = addr;
 		}
 
 		// wait before next frame
