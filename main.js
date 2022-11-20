@@ -240,6 +240,14 @@ async function openUrl(url) {
 	// Main loop / update
 	////////////////////////////
 
+	let bufu = "";
+	let addr = "";
+	socket.on("data", (data) => {
+		URL.revokeObjectURL(bufu);
+		bufu = URL.createObjectURL(new Blob([data.buf], { type: "image/jpeg", endings: "native" }));
+		addr = data.url;
+	});
+
 	async function loop() {
 		if (frameKilled) {
 			socket.disconnect();
@@ -247,21 +255,13 @@ async function openUrl(url) {
 		}
 
 		socket.emit("sync");
-
-		const data = await new Promise(resolve => socket.on("data", resolve));
-		const blob = new Blob([data.buf], { type: "image/jpeg", endings: "native" });
-
-		const prev = frame.src;
-		if (prev.length > 0) {
-			URL.revokeObjectURL(prev);
-		}
-		frame.src = URL.createObjectURL(blob);
+		frame.src = bufu;
 
 		const active = document.activeElement;
 		if (active != addressBar) {
 			if (active == null || active == document.body)
 				input.focus({ preventScroll: true });
-			addressBar.value = data.url;
+			addressBar.value = url;
 		}
 
 		// wait before next frame
