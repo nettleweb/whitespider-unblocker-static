@@ -26,12 +26,17 @@ const input = document.getElementById("c");
 
 const nsw = window.navigator.serviceWorker;
 if (nsw != null) {
-	await nsw.register("/sw.js", {
-		scope: "/",
-		type: "classic",
-		updateViaCache: "none"
-	});
-	await nsw.ready;
+	try {
+		await nsw.register("/sw.js", {
+			scope: "/",
+			type: "classic",
+			updateViaCache: "none"
+		});
+		await nsw.ready;
+	} catch(err) {
+		console.log(err);
+		// ignore as service worker is now optional
+	}
 }
 
 let frameKilled = false;
