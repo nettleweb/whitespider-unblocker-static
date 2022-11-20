@@ -2,7 +2,7 @@
 self.app = {
 	debug: true,
 	cacheName: "whitespider-unblocker",
-	cacheVersion: "1.0.0-beta2",
+	cacheVersion: "1.0.1",
 	cacheList: [
 		"lib/socket.io.min.js",
 		"lib/webalert.js",
