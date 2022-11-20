@@ -166,6 +166,10 @@ async function openUrl(url) {
 		e.stopPropagation();
 		e.returnValue = false;
 
+		// focus input element
+		if (e.type != "mousemove")
+		input.focus({ preventScroll: true });
+
 		socket.emit("mouseevent", {
 			type: e.type,
 			x: e.offsetX,
@@ -184,11 +188,35 @@ async function openUrl(url) {
 		e.stopPropagation();
 		e.returnValue = false;
 
+		input.focus({ preventScroll: true });
+
 		socket.emit("wheelevent", {
 			type: e.type,
 			deltaX: e.deltaX,
 			deltaY: e.deltaY
 		});
+
+		return false;
+	}
+
+	/**
+	 * @param {TouchEvent} e 
+	 */
+	function touchEventHandler(e) {
+		e.preventDefault();
+		e.stopPropagation();
+		e.returnValue = false;
+
+		input.focus({ preventScroll: true });
+
+		const rect = frame.getBoundingClientRect();
+		for (let touch of e.touches) {
+			socket.emit("touchevent", {
+				type: e.type,
+				x: touch.clientX - rect.left,
+				y: touch.clientY - rect.top
+			});
+		}
 
 		return false;
 	}
@@ -209,32 +237,14 @@ async function openUrl(url) {
 		return false;
 	}
 
-	/**
-	 * @param {InputEvent} e 
-	 */
-	function inputEventHandler(e) {
-		e.preventDefault();
-		e.stopPropagation();
-		e.returnValue = false;
-
-		socket.emit("inputevent", {
-			type: e.type,
-			data: e.data
-		});
-
-		return false;
-	}
-
 	const options = { capture: false, passive: false, once: false };
-	frame.addEventListener("click", mouseEventHandler, options);
-	frame.addEventListener("contextmenu", mouseEventHandler, options);
 	frame.addEventListener("mousedown", mouseEventHandler, options);
 	frame.addEventListener("mouseup", mouseEventHandler, options);
 	frame.addEventListener("mousemove", mouseEventHandler, options);
 	frame.addEventListener("wheel", wheelEventHandler, options);
+	frame.addEventListener("touchend", touchEventHandler, options);
 	input.addEventListener("keydown", keyboardEventHandler, options);
 	input.addEventListener("keyup", keyboardEventHandler, options);
-	input.addEventListener("input", inputEventHandler, options);
 
 	////////////////////////////
 	// Main loop / update
@@ -259,8 +269,6 @@ async function openUrl(url) {
 
 		const active = document.activeElement;
 		if (active != addressBar) {
-			if (active == null || active == document.body)
-				input.focus({ preventScroll: true });
 			addressBar.value = addr;
 		}
 
