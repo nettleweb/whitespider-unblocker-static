@@ -39,7 +39,7 @@ if (nsw != null) {
 	}
 }
 
-let frameKilled = false;
+let _$stop = null;
 
 /**
  * @param {string} str 
@@ -258,32 +258,26 @@ async function openUrl(url) {
 		addr = data.url;
 	});
 
-	async function loop() {
-		if (frameKilled) {
-			socket.disconnect();
-			return;
-		}
-
+	const timer = setInterval(() => {
 		socket.emit("sync");
 		frame.src = bufu;
 
-		const active = document.activeElement;
-		if (active != addressBar) {
+		if (document.activeElement != addressBar) {
 			addressBar.value = addr;
 		}
-
-		// wait before next frame
-		await new Promise(resolve => setTimeout(resolve, 100));
-		requestAnimationFrame(loop);
-	}
+	}, 100);
 
 	socket.emit("navigate", url);
-	frameKilled = false;
-	await loop();
+
+	_$stop = () => {
+		clearInterval(timer);
+		socket.disconnect();
+		_$stop = null;
+	};
 }
 
 document.getElementById("home").onclick = () => {
-	frameKilled = true;
+	if (_$stop != null) _$stop();
 	tomcatScreen.style.display = "none";
 	homeScreen.style.display = "block";
 };
