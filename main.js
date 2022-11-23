@@ -21,13 +21,20 @@ const backButton = document.getElementById("back");
 const forwardButton = document.getElementById("forward");
 const refreshButton = document.getElementById("refresh");
 const addressBar = document.getElementById("address-bar");
+const input = document.getElementById("frame-input");
 const frame = document.getElementById("frame");
-const input = document.getElementById("c");
+const overlay = document.getElementById("frame-overlay");
 
 const location = new URL(window.location.href);
 const nsw = window.navigator.serviceWorker;
 const googleSearch = "https://www.google.com/search?q=";
 const googleSearchR = "https://www.google.com/search?btnI=Im+Feeling+Lucky&q=";
+const cliW = document.documentElement.clientWidth;
+const cliH = document.documentElement.clientHeight;
+
+if (cliW < 1280 || cliH < 761) {
+	alert("Your display dimension is currently unsupported (might cause errors), please enlarge your browser window or use a different device. (Recommended minimum dimension: 1280x761)", "Warning");
+}
 
 if (nsw != null && location.hostname != "localhost") {
 	try {
@@ -94,6 +101,16 @@ function fixUrl(url, searchUrl, searchOnly) {
 	return searchUrl + encodeURIComponent(url);
 }
 
+/**
+ * @param {string | null | undefined} text 
+ */
+function gui(text) {
+	if (text != null) {
+		overlay.style.display = "block";
+		overlay.innerHTML = text;
+	} else overlay.style.display = "none";
+}
+
 function hideTitleAndFav() {
 	document.title = "\u2060";
 	document.querySelector("link[rel=\"icon\"]").setAttribute("href", "favicon.ico");
@@ -116,22 +133,17 @@ async function openUrl(url) {
 	homeScreen.style.display = "none";
 	tomcatScreen.style.display = "block";
 
-	// check dimension
-	frame.width = 1280;
-	frame.height = 720;
-	if (frame.clientWidth != 1280 || frame.clientHeight != 720) {
-		frame.setAttribute("style", "width:1280px;height:720px;min-width:1280px;min-height:720px;max-width:1280px;max-height:720px;");
-	}
-
 	////////////////////////////
 	// INIT
 	////////////////////////////
 
 	// connect to server
 	const socket = io();
+	gui("Connection to server...");
 	await new Promise(resolve => socket.on("connected", resolve));
 	socket.emit("new_session");
 	await new Promise(resolve => socket.on("session_id", resolve));
+	socket.emit("navigate", url);
 
 	// setup input proxy element
 	input.autofocus = true;
@@ -243,11 +255,11 @@ async function openUrl(url) {
 	}
 
 	const options = { capture: false, passive: false, once: false };
-	frame.addEventListener("mousedown", mouseEventHandler, options);
-	frame.addEventListener("mouseup", mouseEventHandler, options);
-	frame.addEventListener("mousemove", mouseEventHandler, options);
-	frame.addEventListener("wheel", wheelEventHandler, options);
-	frame.addEventListener("touchend", touchEventHandler, options);
+	input.addEventListener("mousedown", mouseEventHandler, options);
+	input.addEventListener("mouseup", mouseEventHandler, options);
+	input.addEventListener("mousemove", mouseEventHandler, options);
+	input.addEventListener("wheel", wheelEventHandler, options);
+	input.addEventListener("touchend", touchEventHandler, options);
 	input.addEventListener("keydown", keyboardEventHandler, options);
 	input.addEventListener("keyup", keyboardEventHandler, options);
 
@@ -255,25 +267,39 @@ async function openUrl(url) {
 	// Main loop / update
 	////////////////////////////
 
+	let addr = "";
 	socket.on("data", (data) => {
-		const prev = frame.src;
-		if (prev.length > 0) {
-			URL.revokeObjectURL(prev);
-		}
-
+		URL.revokeObjectURL(frame.src);
 		frame.src = URL.createObjectURL(new Blob([data.buf], { type: "image/jpeg", endings: "native" }));
 		if (document.activeElement != addressBar) {
-			addressBar.value = data.url;
+			addressBar.value = addr = data.url;
 		}
 	});
 
+	window.socket = socket;
+
+	async function reconnect() {
+		gui("Attempting to reconnect...");
+		socket.connect();
+		await new Promise(resolve => socket.on("connected", resolve));
+		socket.emit("new_session");
+		await new Promise(resolve => socket.on("session_id", resolve));
+		socket.emit("navigate", addr);
+		gui(); // clear
+	}
+
+	socket.on("disconnect", () => gui("Disconnected from server, please check your internet connection."));
+	socket.on("connect", reconnect);
+	socket.on("force_reconnect", reconnect);
+
 	const timer = setInterval(() => socket.emit("sync"), 100);
-	socket.emit("navigate", url);
 	_$stop = () => {
 		clearInterval(timer);
 		socket.disconnect();
 		_$stop = null;
 	};
+
+	gui(); // clear overlay
 }
 
 document.getElementById("home").onclick = () => {
@@ -287,6 +313,9 @@ if (open != null && isUrl(open)) {
 	await openUrl(open);
 	return;
 }
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
 backgroundScreen.style.display = "none";
 homeScreen.style.display = "block";
@@ -463,24 +492,6 @@ document.getElementById("search-button").onclick = () => {
 document.getElementById("random-button").onclick = () => {
 	run(googleSearchR, true);
 };
-document.getElementById("clear-site-data").onclick = async () => {
-	window.sessionStorage.clear();
-	window.localStorage.clear();
-	let databases = await indexedDB.databases();
-	for (let i = 0; i < databases.length; i++)
-		indexedDB.deleteDatabase(databases[i].name);
-};
-document.getElementById("clear-cache").onclick = async () => {
-	let keys = await caches.keys();
-	for (let i = 0; i < keys.length; i++)
-		await caches.delete(keys[i]);
-};
-document.getElementById("leave-without-history").onclick = () => {
-	window.location.replace(new URL("https://google.com/"));
-};
-document.getElementById("debug-shell").onclick = () => {
-	inspect();
-};
 addShortcutButton.onclick = async () => {
 	const result = await form("", "Add shortcut", [
 		{
@@ -530,7 +541,28 @@ addShortcutButton.onclick = async () => {
 
 	updateShortcuts();
 };
+document.getElementById("version").innerHTML = app.cacheVersion;
 
+//////////////////////////
+// Context menu
+//////////////////////////
+
+document.getElementById("clear-site-data").onclick = async () => {
+	window.sessionStorage.clear();
+	window.localStorage.clear();
+	let databases = await indexedDB.databases();
+	for (let i = 0; i < databases.length; i++)
+		indexedDB.deleteDatabase(databases[i].name);
+};
+document.getElementById("clear-cache").onclick = async () => {
+	let keys = await caches.keys();
+	for (let i = 0; i < keys.length; i++)
+		await caches.delete(keys[i]);
+};
+document.getElementById("leave-without-history").onclick = () => {
+	window.location.replace("https://www.google.com/");
+};
+document.getElementById("debug-shell").onclick = inspect;
 document.body.onclick = () => {
 	contextMenu.style.display = "none";
 	shortcutContextMenu.style.display = "none";
@@ -541,7 +573,6 @@ document.oncontextmenu = (e) => {
 	contextMenu.style.left = e.clientX + "px";
 	contextMenu.style.display = "block";
 };
-document.getElementById("version").innerHTML = app.cacheVersion;
 
 eval(`console.log("%cWhiteSpider.gq", "background-color:#001a1a;border:3px solid #008080;border-radius:10px;color:#ffffff;display:block;font-family:Ubuntu;font-size:24px;font-stretch:normal;font-style:normal;font-weight:600;height:fit-content;margin:10px;padding:10px;position:relative;text-align:start;text-decoration:none;width:fit-content");console.log("%cPage Verified", "position: relative;display: block;width: fit-content;height: fit-content;color: #ffffff;background-color: #008000;font-size: 14px;font-weight: 600;font-family: \\"Ubuntu Mono\\";font-stretch: normal;text-align: start;text-decoration: none;");`);
 
