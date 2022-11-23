@@ -24,8 +24,9 @@ const addressBar = document.getElementById("address-bar");
 const frame = document.getElementById("frame");
 const input = document.getElementById("c");
 
+const location = new URL(window.location.href);
 const nsw = window.navigator.serviceWorker;
-if (nsw != null) {
+if (nsw != null && location.hostname != "localhost") {
 	try {
 		await nsw.register("/sw.js", {
 			scope: "/",
@@ -141,6 +142,7 @@ async function openUrl(url) {
 		if (e.keyCode == 13) {
 			e.preventDefault();
 			socket.emit("navigate", fixUrl(addressBar.value, googleSearch, false));
+			input.focus({ preventScroll: true });
 		}
 	};
 
@@ -250,25 +252,20 @@ async function openUrl(url) {
 	// Main loop / update
 	////////////////////////////
 
-	let bufu = "";
-	let addr = "";
 	socket.on("data", (data) => {
-		URL.revokeObjectURL(bufu);
-		bufu = URL.createObjectURL(new Blob([data.buf], { type: "image/jpeg", endings: "native" }));
-		addr = data.url;
+		const prev = frame.src;
+		if (prev.length > 0) {
+			URL.revokeObjectURL(prev);
+		}
+
+		frame.src = URL.createObjectURL(new Blob([data.buf], { type: "image/jpeg", endings: "native" }));
+		if (document.activeElement != addressBar) {
+			addressBar.value = data.url;
+		}
 	});
 
-	const timer = setInterval(() => {
-		socket.emit("sync");
-		frame.src = bufu;
-
-		if (document.activeElement != addressBar) {
-			addressBar.value = addr;
-		}
-	}, 100);
-
+	const timer = setInterval(() => socket.emit("sync"), 100);
 	socket.emit("navigate", url);
-
 	_$stop = () => {
 		clearInterval(timer);
 		socket.disconnect();
@@ -282,7 +279,6 @@ document.getElementById("home").onclick = () => {
 	homeScreen.style.display = "block";
 };
 
-const location = new URL(window.location.href);
 const open = location.searchParams.get("open");
 if (open != null && isUrl(open)) {
 	await openUrl(open);
