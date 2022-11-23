@@ -26,6 +26,9 @@ const input = document.getElementById("c");
 
 const location = new URL(window.location.href);
 const nsw = window.navigator.serviceWorker;
+const googleSearch = "https://www.google.com/search?q=";
+const googleSearchR = "https://www.google.com/search?btnI=Im+Feeling+Lucky&q=";
+
 if (nsw != null && location.hostname != "localhost") {
 	try {
 		await nsw.register("/sw.js", {
@@ -329,8 +332,6 @@ const deleteShortcutButton = document.getElementById("delete-shortcut");
 const contextMenu = document.getElementById("context-menu");
 const shortcutContextMenu = document.getElementById("shortcut-context-menu");
 
-const googleSearch = "https://www.google.com/search?q=";
-const googleSearchR = "https://www.google.com/search?btnI=Im+Feeling+Lucky&q=";
 const shortcuts = storage.getItem("shortcuts", [
 	{
 		name: "Google",
@@ -542,7 +543,6 @@ document.oncontextmenu = (e) => {
 };
 document.getElementById("version").innerHTML = app.cacheVersion;
 
-console.log("%cWhiteSpider.gq", "background-color:#001a1a;border:3px solid #008080;border-radius:10px;color:#ffffff;display:block;font-family:Ubuntu;font-size:24px;font-stretch:normal;font-style:normal;font-weight:600;height:fit-content;margin:10px;padding:10px;position:relative;text-align:start;text-decoration:none;width:fit-content");
-console.log("%cPage Verified", "position: relative;display: block;width: fit-content;height: fit-content;color: #ffffff;background-color: #008000;font-size: 14px;font-weight: 600;font-family: \"Ubuntu Mono\";font-stretch: normal;text-align: start;text-decoration: none;");
+eval(`console.log("%cWhiteSpider.gq", "background-color:#001a1a;border:3px solid #008080;border-radius:10px;color:#ffffff;display:block;font-family:Ubuntu;font-size:24px;font-stretch:normal;font-style:normal;font-weight:600;height:fit-content;margin:10px;padding:10px;position:relative;text-align:start;text-decoration:none;width:fit-content");console.log("%cPage Verified", "position: relative;display: block;width: fit-content;height: fit-content;color: #ffffff;background-color: #008000;font-size: 14px;font-weight: 600;font-family: \\"Ubuntu Mono\\";font-stretch: normal;text-align: start;text-decoration: none;");`);
 
 })();
