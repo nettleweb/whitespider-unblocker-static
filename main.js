@@ -27,6 +27,7 @@ const overlay = document.getElementById("frame-overlay");
 
 const location = new URL(window.location.href);
 const nsw = window.navigator.serviceWorker;
+const bingSearch = "https://www.bing.com/search?q=";
 const googleSearch = "https://www.google.com/search?q=";
 const googleSearchR = "https://www.google.com/search?btnI=Im+Feeling+Lucky&q=";
 const cliW = document.documentElement.clientWidth;
@@ -45,12 +46,14 @@ if (nsw != null && location.hostname != "localhost") {
 		});
 		await nsw.ready;
 	} catch(err) {
-		console.log(err);
+		console.warn(err);
 		// ignore as service worker is now optional
 	}
 }
 
 let _$stop = null;
+let mode = location.searchParams.get("mode") || "tomcat";
+let server = location.searchParams.get("server") || location.origin;
 
 /**
  * @param {string} str 
@@ -111,24 +114,34 @@ function gui(text) {
 	} else overlay.style.display = "none";
 }
 
-function hideTitleAndFav() {
+/**
+ * @param {string} url 
+ */
+async function openUrl(url) {
 	document.title = "\u2060";
 	document.querySelector("link[rel=\"icon\"]").setAttribute("href", "favicon.ico");
-}
 
-/**
- * @param {string} searchUrl 
- * @param {boolean} searchOnly 
- */
-async function run(searchUrl, searchOnly) {
-	await openUrl(fixUrl(urlInput.value, searchUrl, searchOnly));
+	switch (mode) {
+		case "raw-embed":
+			const win = window.open(void 0, "_blank");
+			win.focus();
+			win.location = new URL("?open=" + encodeURIComponent(url), "https://ruochenjia.repl.co/");
+			break;
+		case "tomcat":
+			await tomcatUrl(url);
+			break;
+		case "ultraviolet":
+			alert("error", "Error");
+			break;
+		default:
+			throw new TypeError("Invalid mode: " + mode);
+	}
 }
 
 /**
  * @param {string} url 
  */
-async function openUrl(url) {
-	hideTitleAndFav();
+async function tomcatUrl(url) {
 	backgroundScreen.style.display = "none";
 	homeScreen.style.display = "none";
 	tomcatScreen.style.display = "block";
@@ -138,7 +151,7 @@ async function openUrl(url) {
 	////////////////////////////
 
 	// connect to server
-	const socket = io();
+	const socket = io(server);
 	gui("Connection to server...");
 	await new Promise(resolve => socket.on("connected", resolve));
 	socket.emit("new_session");
@@ -351,6 +364,9 @@ window.onbeforeunload = window.onunload = () => {
 	storage.save();
 };
 
+mode = storage.getItem("mode", "tomcat");
+server = storage.getItem("server", location.origin);
+
 const urlInput = document.getElementById("input");
 const shortcutBar = document.getElementById("shortcut-bar");
 const addShortcutButton = document.getElementById("add-shortcut");
@@ -358,6 +374,11 @@ const editShortcutButton = document.getElementById("edit-shortcut");
 const deleteShortcutButton = document.getElementById("delete-shortcut");
 const contextMenu = document.getElementById("context-menu");
 const shortcutContextMenu = document.getElementById("shortcut-context-menu");
+
+const menuPlaceholder = document.getElementById("menu-placeholder");
+const serverMenu = document.getElementById("server");
+const advancedMenu = document.getElementById("advanced");
+const serverAddress = document.getElementById("server-address");
 
 const shortcuts = storage.getItem("shortcuts", [
 	{
@@ -391,6 +412,30 @@ const shortcuts = storage.getItem("shortcuts", [
 		link: "https://www.y8.com"
 	}
 ]);
+
+// menu init
+serverAddress.value = server;
+switch (mode) {
+	case "raw-embed":
+		document.getElementById("raw-embed").checked = true;
+		serverMenu.style.display = "none";
+		menuPlaceholder.style.display = "block";
+		break;
+	case "tomcat":
+		document.getElementById("tomcat").checked = true;
+		serverMenu.style.display = "block";
+		advancedMenu.style.display = "none";
+		menuPlaceholder.style.display = "none";
+		break;
+	case "ultraviolet":
+		document.getElementById("ultraviolet").checked = true;
+		serverMenu.style.display = "block";
+		advancedMenu.style.display = "block";
+		menuPlaceholder.style.display = "none";
+		break;
+	default:
+		throw new Error("Invalid mode: " + mode);
+}
 
 function updateShortcuts() {
 	shortcutBar.innerHTML = "";
@@ -481,14 +526,14 @@ updateShortcuts();
 urlInput.onkeydown = (e) => {
 	if (e.keyCode == 13) {
 		e.preventDefault();
-		run(googleSearch, false);
+		run(mode == "raw-embed" ? bingSearch : googleSearch, false);
 	}
 };
 document.getElementById("search-button").onclick = () => {
-	run(googleSearch, true);
+	run(mode == "raw-embed" ? bingSearch : googleSearch, true);
 };
 document.getElementById("random-button").onclick = () => {
-	run(googleSearchR, true);
+	run(mode == "raw-embed" ? bingSearch : googleSearchR, true);
 };
 addShortcutButton.onclick = async () => {
 	const result = await form("", "Add shortcut", [
@@ -539,7 +584,47 @@ addShortcutButton.onclick = async () => {
 
 	updateShortcuts();
 };
+for (let radio of document.getElementsByName("working-mode")) {
+	radio.onclick = () => {
+		const id = radio.id;
+		switch (id) {
+			case "raw-embed":
+				document.getElementById("raw-embed").checked = true;
+				serverMenu.style.display = "none";
+				menuPlaceholder.style.display = "block";
+				break;
+			case "tomcat":
+				document.getElementById("tomcat").checked = true;
+				serverMenu.style.display = "block";
+				advancedMenu.style.display = "none";
+				menuPlaceholder.style.display = "none";
+				break;
+			case "ultraviolet":
+				document.getElementById("ultraviolet").checked = true;
+				serverMenu.style.display = "block";
+				advancedMenu.style.display = "block";
+				menuPlaceholder.style.display = "none";
+				break;
+			default:
+				throw new Error("Invalid mode: " + mode);
+		}
+
+		storage.mode = mode = id;
+	};
+}
+serverAddress.onblur = () => {
+	storage.server = server = serverAddress.value;
+};
+
 document.getElementById("version").innerHTML = app.cacheVersion;
+
+/**
+ * @param {string} searchUrl 
+ * @param {boolean} searchOnly 
+ */
+async function run(searchUrl, searchOnly) {
+	await openUrl(fixUrl(urlInput.value, searchUrl, searchOnly));
+}
 
 //////////////////////////
 // Context menu

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>Loading...</title>
+	</head>
+	<body>
+		<div>Loading...</div>
+		<script type="text/javascript">
+"use strict";
+
+(() => {
+
+const location = new URL(window.location.href);
+const open = location.searchParams.get("open");
+if (open != null) {
+	const url = new URL(open);
+	url.protocol = "https:";
+	document.documentElement.innerHTML = `<head>\n\t\t<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />\n\t\t<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />\n\t\t<meta http-equiv="Referrer-Policy" content="no-referrer" />\n\t\t<meta name="referrer" content="no-referrer" />\n\t\t<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1" />\n\t\t<base href="https://www.google.com/" />\n\t\t<link rel="icon" type="image/x-icon" href="favicon.ico" />\n\t\t<title>Google</title>\n\t\t<style type="text/css">\n* {\n\tmargin: 0px;\n\tpadding: 0px;\n}\n\nbody {\n\tposition: absolute;\n\tdisplay: block;\n\twidth: 100%;\n\theight: 100%;\n\toverflow: hidden;\n}\n\nembed, iframe {\n\tposition: absolute;\n\tdisplay: block;\n\twidth: 100%;\n\theight: 100%;\n\tborder: none;\n}\n\t\t</style>\n\t</head>\n\t<body>\n\t\t<embed type="text/plain" width="1024" height="768" src="${url.href}" />\n\t\t\x3Cscript type="text/javascript">\n"use strict";\n\n(() => {\n\nwindow.onbeforeunload = window.onunload = (e) => {\n\te.preventDefault();\n\te.stopPropagation();\n\n\tconst msg = "\uD800";\n\te.returnValue = msg;\n\treturn msg;\n};\n\n})();\n\t\t\x3C/script>\n\t</body>`;
+	return;
+} else window.location = new URL("https://rjia.gq/");
+
+})();
+		</script>
+	</body>
+</html>

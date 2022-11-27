@@ -145,9 +145,7 @@
 	display: block;
 	width: 75%;
 	height: 20px;
-	margin-left: auto;
-	margin-right: auto;
-	margin-bottom: 20px;
+	margin: auto;
 	line-height: 20px;
 	color: #808080;
 	font-size: 18px;
@@ -159,9 +157,9 @@
 #input {
 	position: relative;
 	display: block;
-	width: calc(100% - 50px);
+	width: calc(100% - 52px);
 	height: 25px;
-	margin: auto;
+	margin-top: 20px;
 	padding-top: 10px;
 	padding-bottom: 10px;
 	padding-left: 25px;
@@ -232,13 +230,14 @@
 
 #shortcut-bar {
 	position: relative;
-	display: grid;
-	width: fit-content;
+	display: flex;
+	width: 100%;
 	height: fit-content;
-	margin: auto;
+	margin-bottom: 50px;
+	flex-direction: row;
+	flex-wrap: wrap;
 	column-gap: 10px;
 	row-gap: 10px;
-	grid-template-columns: auto auto auto auto;
 }
 
 .shortcut-item {
@@ -246,6 +245,7 @@
 	display: block;
 	width: 120px;
 	height: 120px;
+	flex: 0 0 120px;
 	cursor: pointer;
 	border-radius: 25px;
 }
@@ -279,6 +279,84 @@
 	overflow: hidden;
 	line-height: 14px;
 	font-size: 12px;
+}
+
+.title {
+	position: relative;
+	display: block;
+	width: fit-content;
+	height: fit-content;
+	color: #ffffff;
+	line-height: 40px;
+	font-size: 18px;
+	font-weight: 600;
+}
+
+.menu-section {
+	position: relative;
+	display: block;
+	width: calc(100% - 20px);
+	height: fit-content;
+	padding: 20px;
+	margin-bottom: 20px;
+	border-style: solid;
+	border-width: 1px;
+	border-color: #808080;
+	border-radius: 25px;
+}
+
+.menu-section input[type="radio"] {
+	position: relative;
+	display: inline-block;
+	width: 15px;
+	height: 15px;
+	vertical-align: middle;
+}
+
+.menu-section input[type="text"] {
+	position: relative;
+	display: inline-block;
+	width: fit-content;
+	height: 16px;
+	padding: 8px;
+	line-height: 16px;
+	outline: none;
+	border-style: solid;
+	border-width: 1px;
+	border-color: #808080;
+	border-radius: 10px;
+	vertical-align: middle;
+}
+
+.menu-section input[type="text"]:focus {
+	border-color: #ffffff;
+}
+
+.menu-section label {
+	position: relative;
+	display: inline-block;
+	width: fit-content;
+	height: 24px;
+	color: #f0f0f0;
+	line-height: 24px;
+	font-size: 16px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	vertical-align: middle;
+}
+
+.working-mode-desc {
+	position: relative;
+	display: block;
+	width: 100%;
+	height: fit-content;
+	margin-bottom: 10px;
+	color: #a0a0a0;
+	line-height: 18px;
+}
+
+#menu-placeholder {
+	display: none;
 }
 
 #footer {
@@ -489,15 +567,50 @@
 					<div id="large-logo"></div>
 					<div id="sublogo">Unblocker</div>
 					<input id="input" type="text" placeholder="Search or Type a URL" />
-				</div>
-				<div id="button-bar">
-					<div id="search-button">Unblocked Search</div>
-					<div id="random-button">I'm Feeling Lucky</div>
-				</div>
-				<div id="shortcut-bar">
-					<div id="add-shortcut" class="shortcut-item">
-						<img class="shortcut-item-icon" width="50" height="50" src="res/add.svg" alt="Add shortcut" />
-						<div class="shortcut-item-text">Add shortcut</div>
+					<div id="button-bar">
+						<div id="search-button">Unblocked Search</div>
+						<div id="random-button">I'm Feeling Lucky</div>
+					</div>
+					<div id="shortcut-bar">
+						<div id="add-shortcut" class="shortcut-item">
+							<img class="shortcut-item-icon" width="50" height="50" src="res/add.svg" alt="Add shortcut" />
+							<div class="shortcut-item-text">Add shortcut</div>
+						</div>
+					</div>
+					<div class="title">Working Mode:</div>
+					<div class="menu-section">
+						<input id="raw-embed" type="radio" name="working-mode" class="working-mode-radio" />
+						<label for="raw-embed" class="working-mode-label">Raw Embed</label>
+						<ul class="working-mode-desc">
+							<li>Fastest, but can only bypass the restrictions of certain browser extensions.</li>
+							<li>Does not work if the site does not support embed. ( X-Frame-Options header is present )</li>
+						</ul>
+						<input id="tomcat" type="radio" name="working-mode" class="working-mode-radio" checked="true" />
+						<label for="tomcat" class="working-mode-label">Tomcat</label>
+						<ul class="working-mode-desc">
+							<li>Supports all websites.</li>
+							<li>Can bypass both network and extension restrictions.</li>
+							<li>Faster than Ultraviolet, but has the lowest frame rate, not recommended for FPS gaming.</li>
+						</ul>
+						<input id="ultraviolet" type="radio" name="working-mode" class="working-mode-radio" disabled="true" />
+						<label for="ultraviolet" class="working-mode-label">Ultraviolet</label>
+						<ul class="working-mode-desc">
+							<li>Supports common websites.</li>
+							<li>Can bypass both network and extension restrictions.</li>
+							<li>Requires service worker registration.</li>
+							<li>Slowest, but has no impacts on frame rate.</li>
+						</ul>
+					</div>
+					<div class="title">Options:</div>
+					<div class="menu-section">
+						<label id="menu-placeholder">No options available</label>
+						<div id="server">
+							<label for="server-address">Server address:</label>
+							<input id="server-address" type="text" placeholder="https://example.com/example" />
+							<div id="advanced">
+
+							</div>
+						</div>
 					</div>
 				</div>
 				<div id="footer">WhiteSpider Unblocker v<span id="version"></span> | Open source on <a href="https://github.com/ruochenjia/whitespider-unblocker" target="_blank" rel="noopener">GitHub</a></div>
