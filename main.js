@@ -276,8 +276,6 @@ async function openUrl(url) {
 		}
 	});
 
-	window.socket = socket;
-
 	async function reconnect() {
 		gui("Attempting to reconnect...");
 		socket.connect();

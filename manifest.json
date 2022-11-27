@@ -3,7 +3,7 @@
 	"name": "WhiteSpider Unblocker",
 	"short_name": "Unblocker",
 	"description": "Unblock websites through a proxy server, bypass the restrictions of local network and browser extensions.",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"display": "fullscreen",
 	"orientation": "any",
 	"background_color": "#002a2a",
