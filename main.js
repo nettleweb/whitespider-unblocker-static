@@ -21,7 +21,6 @@ const backButton = document.getElementById("back");
 const forwardButton = document.getElementById("forward");
 const refreshButton = document.getElementById("refresh");
 const addressBar = document.getElementById("address-bar");
-const input = document.getElementById("frame-input");
 const frame = document.getElementById("frame");
 const overlay = document.getElementById("frame-overlay");
 
@@ -157,6 +156,11 @@ async function tomcatUrl(url) {
 	socket.emit("new_session");
 	await new Promise(resolve => socket.on("session_id", resolve));
 	socket.emit("navigate", url);
+
+	// clean the input element to avoid errors
+	const old = document.getElementById("frame-input");
+	const input = old.cloneNode(false);
+	old.parentNode.replaceChild(input, old);
 
 	// setup input proxy element
 	input.autofocus = true;
