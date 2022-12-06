@@ -21,6 +21,7 @@ const backButton = document.getElementById("back");
 const forwardButton = document.getElementById("forward");
 const refreshButton = document.getElementById("refresh");
 const addressBar = document.getElementById("address-bar");
+const frameContainer = document.getElementById("frame-container");
 const frame = document.getElementById("frame");
 const overlay = document.getElementById("frame-overlay");
 
@@ -50,9 +51,43 @@ if (nsw != null && location.hostname != "localhost") {
 	}
 }
 
+const storage = (() => {
+	const base = {
+		/**
+		 * @type {<E>(key: string, def: E) => E}
+		 */
+		getItem: function (key, def) {
+			let item = this[key];
+			if (item == null)
+				return this[key] = def;
+			return item;
+		},
+		save: () => { }
+	};
+
+	try {
+		const data = localStorage.getItem("data") || "{}";
+		Object.assign(base, JSON.parse(data));
+		base.save = function () {
+			localStorage.setItem("data", JSON.stringify(this));
+		};
+
+		// autosave
+		setInterval(() => {
+			base.save();
+		}, 10000);
+	} catch(err) {
+		alert("Local storage is disabled by your browser, your browsing data will not be saved.", "Warning");
+	}
+
+	return base;
+})();
+
+window.onbeforeunload = window.onunload = () => {
+	storage.save();
+};
+
 let _$stop = null;
-let mode = location.searchParams.get("mode") || "tomcat";
-let server = location.searchParams.get("server") || location.origin;
 
 /**
  * @param {string} str 
@@ -149,11 +184,20 @@ async function tomcatUrl(url) {
 	// INIT
 	////////////////////////////
 
+	// parse dimension string
+	const dimens = dimension.split("x");
+	const width = parseInt(dimens[0]);
+	const height = parseInt(dimens[1]);
+
+	// resize frame container
+	frameContainer.style.width = width + "px";
+	frameContainer.style.height = height + "px";
+
 	// connect to server
 	const socket = io(server);
 	gui("Connection to server...");
 	await new Promise(resolve => socket.on("connected", resolve));
-	socket.emit("new_session");
+	socket.emit("new_session", { quality, width, height });
 	await new Promise(resolve => socket.on("session_id", resolve));
 	socket.emit("navigate", url);
 
@@ -307,7 +351,7 @@ async function tomcatUrl(url) {
 	socket.on("connect", reconnect);
 	socket.on("force_reconnect", reconnect);
 
-	const timer = setInterval(() => socket.emit("sync"), 100);
+	const timer = setInterval(() => socket.emit("sync"), frameRate);
 	_$stop = () => {
 		clearInterval(timer);
 		socket.disconnect();
@@ -323,53 +367,15 @@ document.getElementById("home").onclick = () => {
 	homeScreen.style.display = "block";
 };
 
-const open = location.searchParams.get("open");
-if (open != null && isUrl(open)) {
-	await openUrl(open);
-	return;
-}
-
-//////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////
-
 backgroundScreen.style.display = "none";
 homeScreen.style.display = "block";
 
-const storage = (() => {
-	const base = {
-		getItem: function (key, def) {
-			let item = this[key];
-			if (item == null)
-				return this[key] = def;
-			return item;
-		},
-		save: () => { }
-	};
-
-	try {
-		const data = localStorage.getItem("data") || "{}";
-		Object.assign(base, JSON.parse(data));
-		base.save = function () {
-			localStorage.setItem("data", JSON.stringify(this));
-		};
-
-		// autosave
-		setInterval(() => {
-			base.save();
-		}, 10000);
-	} catch(err) {
-		alert("Local storage is disabled by your browser, your browsing data will not be saved.", "Warning");
-	}
-
-	return base;
-})();
-
-window.onbeforeunload = window.onunload = () => {
-	storage.save();
-};
-
-mode = storage.getItem("mode", "tomcat");
-server = storage.getItem("server", location.origin);
+let mode = storage.getItem("mode", "tomcat");
+let server = storage.getItem("server", location.origin);
+let quality = storage.getItem("quality", 50);
+let frameRate = storage.getItem("frameRate", 100);
+let dimension = storage.getItem("dimension", "1280x720");
+let bareServer = storage.getItem("bareServer", location.origin + "/bare/");
 
 const urlInput = document.getElementById("input");
 const shortcutBar = document.getElementById("shortcut-bar");
@@ -381,8 +387,12 @@ const shortcutContextMenu = document.getElementById("shortcut-context-menu");
 
 const menuPlaceholder = document.getElementById("menu-placeholder");
 const serverMenu = document.getElementById("server");
-const advancedMenu = document.getElementById("advanced");
+const bareMenu = document.getElementById("bare");
 const serverAddress = document.getElementById("server-address");
+const qualitySelect = document.getElementById("quality");
+const frameRateSelect = document.getElementById("frame-rate");
+const dimensionSelect = document.getElementById("dimension");
+const bareServerAddress = document.getElementById("bare-server");
 
 const shortcuts = storage.getItem("shortcuts", [
 	{
@@ -419,22 +429,27 @@ const shortcuts = storage.getItem("shortcuts", [
 
 // menu init
 serverAddress.value = server;
+qualitySelect.value = quality;
+frameRateSelect.value = frameRate;
+dimensionSelect.value = dimension;
+bareServerAddress.value = bareServer;
 switch (mode) {
 	case "raw-embed":
 		document.getElementById("raw-embed").checked = true;
 		serverMenu.style.display = "none";
+		bareMenu.style.display = "none";
 		menuPlaceholder.style.display = "block";
 		break;
 	case "tomcat":
 		document.getElementById("tomcat").checked = true;
 		serverMenu.style.display = "block";
-		advancedMenu.style.display = "none";
+		bareMenu.style.display = "none";
 		menuPlaceholder.style.display = "none";
 		break;
 	case "ultraviolet":
 		document.getElementById("ultraviolet").checked = true;
-		serverMenu.style.display = "block";
-		advancedMenu.style.display = "block";
+		serverMenu.style.display = "none";
+		bareMenu.style.display = "block";
 		menuPlaceholder.style.display = "none";
 		break;
 	default:
@@ -595,18 +610,19 @@ for (let radio of document.getElementsByName("working-mode")) {
 			case "raw-embed":
 				document.getElementById("raw-embed").checked = true;
 				serverMenu.style.display = "none";
+				bareMenu.style.display = "none";
 				menuPlaceholder.style.display = "block";
 				break;
 			case "tomcat":
 				document.getElementById("tomcat").checked = true;
 				serverMenu.style.display = "block";
-				advancedMenu.style.display = "none";
+				bareMenu.style.display = "none";
 				menuPlaceholder.style.display = "none";
 				break;
 			case "ultraviolet":
 				document.getElementById("ultraviolet").checked = true;
-				serverMenu.style.display = "block";
-				advancedMenu.style.display = "block";
+				serverMenu.style.display = "none";
+				bareMenu.style.display = "block";
 				menuPlaceholder.style.display = "none";
 				break;
 			default:
@@ -619,8 +635,18 @@ for (let radio of document.getElementsByName("working-mode")) {
 serverAddress.onblur = () => {
 	storage.server = server = serverAddress.value;
 };
-
-document.getElementById("version").innerHTML = app.cacheVersion;
+qualitySelect.onchange = () => {
+	storage.quality = quality = qualitySelect.value;
+};
+frameRateSelect.onchange = () => {
+	storage.frameRate = frameRate = frameRateSelect.value;
+};
+dimensionSelect.onchange = () => {
+	storage.dimension = dimension = dimensionSelect.value;
+};
+bareServerAddress.onblur = () => {
+	storage.bareServer = bareServer = bareServerAddress.value;
+};
 
 /**
  * @param {string} searchUrl 

@@ -19,6 +19,7 @@
 		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1" />
 		<meta name="description" content="WhiteSpider Unblocker - Unblock websites through a proxy server, bypass the restrictions of local network and browser extensions." />
 		<meta name="keywords" content="whitespider,unblocker,unblock,unblocked,proxy,open-source,free,no ads,adless" />
+		<meta name="theme-color" content="#001a1a" />
 		<base href="/" />
 		<link rel="icon" type="image/x-icon" href="favicon0.ico" />
 		<link rel="stylesheet" type="text/css" href="standard.css" />
@@ -27,7 +28,6 @@
 		<link rel="canonical" href="https://unblocker.whitespider.gq/" />
 		<script type="text/javascript" src="lib/socket.io.min.js"></script>
 		<script type="text/javascript" src="lib/webalert.js"></script>
-		<script type="text/javascript" src="app.js"></script>
 		<title>WhiteSpider Unblocker</title>
 		<style type="text/css">
 .screen {
@@ -126,8 +126,6 @@
 	margin-right: auto;
 	margin-top: 100px;
 	margin-bottom: 20px;
-	-webkit-user-select: none;
-	user-select: none;
 }
 
 #large-logo {
@@ -295,7 +293,7 @@
 .menu-section {
 	position: relative;
 	display: block;
-	width: calc(100% - 20px);
+	width: calc(100% - 40px);
 	height: fit-content;
 	padding: 20px;
 	margin-bottom: 20px;
@@ -313,13 +311,15 @@
 	vertical-align: middle;
 }
 
-.menu-section input[type="text"] {
+.menu-section input[type="text"], .menu-section select {
 	position: relative;
 	display: inline-block;
 	width: fit-content;
 	height: 16px;
 	padding: 8px;
+	margin: 5px;
 	line-height: 16px;
+	box-sizing: content-box;
 	outline: none;
 	border-style: solid;
 	border-width: 1px;
@@ -330,6 +330,10 @@
 
 .menu-section input[type="text"]:focus {
 	border-color: #ffffff;
+}
+
+.menu-section select {
+	background-color: #001a1a;
 }
 
 .menu-section label {
@@ -348,8 +352,9 @@
 .working-mode-desc {
 	position: relative;
 	display: block;
-	width: 100%;
+	width: calc(100% - 15px);
 	height: fit-content;
+	margin-left: 15px;
 	margin-bottom: 10px;
 	color: #a0a0a0;
 	line-height: 18px;
@@ -592,7 +597,7 @@
 							<li>Can bypass both network and extension restrictions.</li>
 							<li>Faster than Ultraviolet, but has the lowest frame rate, not recommended for FPS gaming.</li>
 						</ul>
-						<input id="ultraviolet" type="radio" name="working-mode" class="working-mode-radio" disabled="true" />
+						<input id="ultraviolet" type="radio" name="working-mode" class="working-mode-radio" />
 						<label for="ultraviolet" class="working-mode-label">Ultraviolet</label>
 						<ul class="working-mode-desc">
 							<li>Supports common websites.</li>
@@ -605,11 +610,37 @@
 					<div class="menu-section">
 						<label id="menu-placeholder">No options available</label>
 						<div id="server">
-							<label for="server-address">Server address:</label>
+							<label for="server-address">Server Address:</label>
 							<input id="server-address" type="text" placeholder="https://example.com/example" />
-							<div id="advanced">
-
-							</div>
+							<br />
+							<label for="quality">Quality:</label>
+							<select id="quality">
+								<option value="50" selected="true">Normal</option>
+								<option value="75">High</option>
+								<option value="100">Extreme</option>
+							</select>
+							<br />
+							<label for="frame-rate">Frame Rate:</label>
+							<select id="frame-rate">
+								<option value="200">Smooth</option>
+								<option value="100" selected="true">Normal</option>
+								<option value="50">High</option>
+								<option value="25">Extreme</option>
+							</select>
+							<br />
+							<label for="dimension">Display Dimension:</label>
+							<select id="dimension">
+								<option value="1280x720" selected="true">1280x720</option>
+								<option value="1024x768">1024x768</option>
+								<option value="1600x900">1600x900</option>
+								<option value="1920x1080">1920x1080</option>
+							</select>
+							<br />
+							<label>&#x26A0; High configuration can cause lagging in poor network condition.</label>
+						</div>
+						<div id="bare">
+							<label for="bare-server">Bare Server:</label>
+							<input id="bare-server" type="text" placeholder="https://example.com/bare/" />
 						</div>
 					</div>
 				</div>
