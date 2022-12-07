@@ -341,7 +341,7 @@ async function tomcatUrl(url) {
 		gui("Attempting to reconnect...");
 		socket.connect();
 		await new Promise(resolve => socket.on("connected", resolve));
-		socket.emit("new_session");
+		socket.emit("new_session", { quality, width, height });
 		await new Promise(resolve => socket.on("session_id", resolve));
 		socket.emit("navigate", addr);
 		gui(); // clear
