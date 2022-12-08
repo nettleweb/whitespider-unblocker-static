@@ -2,8 +2,10 @@
 
 (() => {
 importScripts("/app.js");
+importScripts("/uv/uv.sw.js");
 
 const cacheName = `${location.hostname}-${app.cacheName}-${app.cacheVersion}`;
+const sw = new UVServiceWorker();
 
 async function install() {
 	const cache = await caches.open(cacheName);
@@ -29,8 +31,12 @@ async function cache(request, response) {
 async function fetchRe(request) {
 	let response = await caches.match(request, { cacheName });
 	if (response == null) {
-		response = await fetch(request);
-		await cache(request, response);
+		if (request.url.startsWith(sw.prefix)) {
+			response = await sw.fetch(request);
+		} else {
+			response = await fetch(request);
+			await cache(request, response);
+		}
 	}
 
 	const headers = new Headers(response.headers);

@@ -70,7 +70,9 @@ if (nsw != null) {
 }
 
 const url = new URL(Base64.atob(open));
-window.location.replace(location.origin + __uv$config.prefix + __uv$config.encodeUrl(url.href));
+const loc = location.origin + __uv$config.prefix + __uv$config.encodeUrl(url.href);
+console.log(url.href, loc);
+//window.location.replace(loc);
 
 })();
 // ]]>
