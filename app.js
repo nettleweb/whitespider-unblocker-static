@@ -2,7 +2,7 @@
 self.app = {
 	debug: true,
 	cacheName: "whitespider-unblocker",
-	cacheVersion: "1.1.0-beta1",
+	cacheVersion: "1.1.1",
 	cacheList: [
 		"lib/socket.io.min.js",
 		"lib/webalert.js",
@@ -27,10 +27,17 @@ self.app = {
 		"res/more.svg",
 		"res/refresh.svg",
 		"res/tiktok.svg",
+		"res/winxperror.wav",
 		"res/y8.svg",
 		"res/youtube.svg",
+		"uv/uv.bundle.js",
+		"uv/uv.client.js",
+		"uv/uv.config.js",
+		"uv/uv.handler.js",
+		"uv/uv.sw.js",
 		"404.xht",
 		"app.js",
+		"b64.js",
 		"favicon.ico",
 		"favicon0.ico",
 		"index.xht",
@@ -38,7 +45,8 @@ self.app = {
 		"manifest.json",
 		"robots.txt",
 		"standard.css",
-		"sw.js"
+		"sw.js",
+		"uv.xht"
 	],
 	headers: {
 		"Cross-Origin-Embedder-Policy": "require-corp",

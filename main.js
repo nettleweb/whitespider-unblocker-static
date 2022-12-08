@@ -30,12 +30,6 @@ const nsw = window.navigator.serviceWorker;
 const bingSearch = "https://www.bing.com/search?q=";
 const googleSearch = "https://www.google.com/search?q=";
 const googleSearchR = "https://www.google.com/search?btnI=Im+Feeling+Lucky&q=";
-const cliW = document.documentElement.clientWidth;
-const cliH = document.documentElement.clientHeight;
-
-if (cliW < 1280 || cliH < 761) {
-	alert("Your display dimension is currently unsupported (might cause errors), please enlarge your browser window or use a different device. (Recommended minimum dimension: 1280x761)", "Warning");
-}
 
 if (nsw != null && location.hostname != "localhost") {
 	try {
@@ -157,15 +151,13 @@ async function openUrl(url) {
 
 	switch (mode) {
 		case "raw-embed":
-			const win = window.open(void 0, "_blank");
-			win.focus();
-			win.location = new URL("?open=" + encodeURIComponent(url), "https://ruochenjia.repl.co/");
+			window.open(new URL("?open=" + encodeURIComponent(url), "https://ruochenjia.repl.co/"), "_blank").focus();
 			break;
 		case "tomcat":
 			await tomcatUrl(url);
 			break;
 		case "ultraviolet":
-			alert("error", "Error");
+			window.open(new URL("uv.xht?o=" + Base64.btoa(url), location.origin), "_blank").focus();
 			break;
 		default:
 			throw new TypeError("Invalid mode: " + mode);
@@ -663,12 +655,13 @@ async function run(searchUrl, searchOnly) {
 document.getElementById("clear-site-data").onclick = async () => {
 	window.sessionStorage.clear();
 	window.localStorage.clear();
-	let databases = await indexedDB.databases();
+	const databases = await indexedDB.databases();
 	for (let i = 0; i < databases.length; i++)
 		indexedDB.deleteDatabase(databases[i].name);
+	beep();
 };
 document.getElementById("clear-cache").onclick = async () => {
-	let keys = await caches.keys();
+	const keys = await caches.keys();
 	for (let i = 0; i < keys.length; i++)
 		await caches.delete(keys[i]);
 };
@@ -688,5 +681,26 @@ document.oncontextmenu = (e) => {
 };
 
 eval(`console.log("%cWhiteSpider.gq", "background-color:#001a1a;border:3px solid #008080;border-radius:10px;color:#ffffff;display:block;font-family:Ubuntu;font-size:24px;font-stretch:normal;font-style:normal;font-weight:600;height:fit-content;margin:10px;padding:10px;position:relative;text-align:start;text-decoration:none;width:fit-content");console.log("%cPage Verified", "position: relative;display: block;width: fit-content;height: fit-content;color: #ffffff;background-color: #008000;font-size: 14px;font-weight: 600;font-family: \\"Ubuntu Mono\\";font-stretch: normal;text-align: start;text-decoration: none;");`);
+
+//////////////////////////
+// Easter egg
+//////////////////////////
+
+const audioContext = new AudioContext({  
+	latencyHint: "balanced",
+	sampleRate: 48000
+});
+const beepWav = await (await fetch("res/winxperror.wav", { method: "GET", mode: "same-origin" })).arrayBuffer();
+const audioBuffer = await audioContext.decodeAudioData(beepWav);
+
+function beep(tune = 0) {
+	const src = audioContext.createBufferSource();
+	src.buffer = audioBuffer;
+	src.loop = false;
+	src.detune.value = tune;
+	src.connect(audioContext.destination);
+	src.start(0, 0);
+}
+window.whitespider = beep;
 
 })();
