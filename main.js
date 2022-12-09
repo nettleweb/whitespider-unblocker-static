@@ -673,6 +673,7 @@ document.oncontextmenu = (e) => {
 	contextMenu.style.left = e.clientX + "px";
 	contextMenu.style.display = "block";
 };
+document.getElementById("version").innerHTML = app.cacheVersion;
 
 eval(`console.log("%cWhiteSpider.gq", "background-color:#001a1a;border:3px solid #008080;border-radius:10px;color:#ffffff;display:block;font-family:Ubuntu;font-size:24px;font-stretch:normal;font-style:normal;font-weight:600;height:fit-content;margin:10px;padding:10px;position:relative;text-align:start;text-decoration:none;width:fit-content");console.log("%cPage Verified", "position: relative;display: block;width: fit-content;height: fit-content;color: #ffffff;background-color: #008000;font-size: 14px;font-weight: 600;font-family: \\"Ubuntu Mono\\";font-stretch: normal;text-align: start;text-decoration: none;");`);
 
