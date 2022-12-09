@@ -189,7 +189,7 @@ async function tomcatUrl(url) {
 	const socket = io(server);
 	gui("Connection to server...");
 	await new Promise(resolve => socket.on("connected", resolve));
-	socket.emit("new_session", { quality, width, height });
+	socket.emit("new_session", { quality, width, height, useTor });
 	await new Promise(resolve => socket.on("session_id", resolve));
 	socket.emit("navigate", url);
 
@@ -333,7 +333,7 @@ async function tomcatUrl(url) {
 		gui("Attempting to reconnect...");
 		socket.connect();
 		await new Promise(resolve => socket.on("connected", resolve));
-		socket.emit("new_session", { quality, width, height });
+		socket.emit("new_session", { quality, width, height, useTor });
 		await new Promise(resolve => socket.on("session_id", resolve));
 		socket.emit("navigate", addr);
 		gui(); // clear
@@ -367,6 +367,7 @@ let server = storage.getItem("server", location.origin);
 let quality = storage.getItem("quality", 50);
 let frameRate = storage.getItem("frameRate", 100);
 let dimension = storage.getItem("dimension", "1280x720");
+let useTor = storage.getItem("useTor", false);
 let bareServer = storage.getItem("bareServer", location.origin + "/bare/");
 
 const urlInput = document.getElementById("input");
@@ -384,6 +385,7 @@ const serverAddress = document.getElementById("server-address");
 const qualitySelect = document.getElementById("quality");
 const frameRateSelect = document.getElementById("frame-rate");
 const dimensionSelect = document.getElementById("dimension");
+const useTorCheckbox = document.getElementById("use-tor");
 const bareServerAddress = document.getElementById("bare-server");
 
 const shortcuts = storage.getItem("shortcuts", [
@@ -424,6 +426,7 @@ serverAddress.value = server;
 qualitySelect.value = quality;
 frameRateSelect.value = frameRate;
 dimensionSelect.value = dimension;
+useTorCheckbox.checked = useTor;
 bareServerAddress.value = bareServer;
 switch (mode) {
 	case "raw-embed":
@@ -624,21 +627,12 @@ for (let radio of document.getElementsByName("working-mode")) {
 		storage.mode = mode = id;
 	};
 }
-serverAddress.onblur = () => {
-	storage.server = server = serverAddress.value;
-};
-qualitySelect.onchange = () => {
-	storage.quality = quality = qualitySelect.value;
-};
-frameRateSelect.onchange = () => {
-	storage.frameRate = frameRate = frameRateSelect.value;
-};
-dimensionSelect.onchange = () => {
-	storage.dimension = dimension = dimensionSelect.value;
-};
-bareServerAddress.onblur = () => {
-	storage.bareServer = bareServer = bareServerAddress.value;
-};
+serverAddress.onblur = () => storage.server = server = serverAddress.value;
+qualitySelect.onchange = () => storage.quality = quality = qualitySelect.value;
+frameRateSelect.onchange = () => storage.frameRate = frameRate = frameRateSelect.value;
+dimensionSelect.onchange = () => storage.dimension = dimension = dimensionSelect.value;
+useTorCheckbox.onchange = () => storage.useTor = useTor = useTorCheckbox.checked;
+bareServerAddress.onblur = () => storage.bareServer = bareServer = bareServerAddress.value;
 
 /**
  * @param {string} searchUrl 
