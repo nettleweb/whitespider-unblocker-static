@@ -368,7 +368,7 @@ let quality = storage.getItem("quality", 50);
 let frameRate = storage.getItem("frameRate", 100);
 let dimension = storage.getItem("dimension", "1280x720");
 let useTor = storage.getItem("useTor", false);
-let bareServer = storage.getItem("bareServer", location.origin + "/bare/");
+let bareServer = storage.getItem("bareServer", "https://bare.wsug.gq/bare/");
 
 const urlInput = document.getElementById("input");
 const shortcutBar = document.getElementById("shortcut-bar");
