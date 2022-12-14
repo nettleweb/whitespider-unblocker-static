@@ -692,7 +692,7 @@ function beep(tune = 0) {
 	const src = audioContext.createBufferSource();
 	src.buffer = audioBuffer;
 	src.loop = false;
-	src.detune.value = tune;
+	src.detune.value = tune * 100;
 	src.connect(audioContext.destination);
 	src.start(0, 0);
 }
