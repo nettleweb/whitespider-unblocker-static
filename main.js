@@ -187,14 +187,17 @@ async function tomcatUrl(url) {
 
 	// connect to server
 	const socket = io(server);
-	gui("Connection to server...");
+	gui("Connecting to server...");
 	await new Promise(resolve => socket.on("connected", resolve));
-	socket.emit("new_session", { quality, width, height, useTor });
+	socket.emit("new_session", { width, height, useTor });
 	await new Promise(resolve => socket.on("session_id", resolve));
 	socket.emit("navigate", url);
 
 	// clean the input element to avoid errors
 	const old = document.getElementById("frame-input");
+	/**
+	 * @type {HTMLElement}
+	 */
 	const input = old.cloneNode(false);
 	old.parentNode.replaceChild(input, old);
 
@@ -236,10 +239,6 @@ async function tomcatUrl(url) {
 		e.stopPropagation();
 		e.returnValue = false;
 
-		// focus input element
-		if (e.type != "mousemove")
-		input.focus({ preventScroll: true });
-
 		socket.emit("mouseevent", {
 			type: e.type,
 			x: e.offsetX,
@@ -258,35 +257,11 @@ async function tomcatUrl(url) {
 		e.stopPropagation();
 		e.returnValue = false;
 
-		input.focus({ preventScroll: true });
-
 		socket.emit("wheelevent", {
 			type: e.type,
 			deltaX: e.deltaX,
 			deltaY: e.deltaY
 		});
-
-		return false;
-	}
-
-	/**
-	 * @param {TouchEvent} e 
-	 */
-	function touchEventHandler(e) {
-		e.preventDefault();
-		e.stopPropagation();
-		e.returnValue = false;
-
-		input.focus({ preventScroll: true });
-
-		const rect = frame.getBoundingClientRect();
-		for (let touch of e.touches) {
-			socket.emit("touchevent", {
-				type: e.type,
-				x: touch.clientX - rect.left,
-				y: touch.clientY - rect.top
-			});
-		}
 
 		return false;
 	}
@@ -307,14 +282,26 @@ async function tomcatUrl(url) {
 		return false;
 	}
 
+	/**
+	 * @param {Event} e 
+	 */
+	function preventDefault(e) {
+		e.preventDefault();
+		e.stopPropagation();
+		e.returnValue = false;
+		input.focus({ preventScroll: true });
+		return false;
+	}
+
 	const options = { capture: false, passive: false, once: false };
 	input.addEventListener("mousedown", mouseEventHandler, options);
 	input.addEventListener("mouseup", mouseEventHandler, options);
 	input.addEventListener("mousemove", mouseEventHandler, options);
 	input.addEventListener("wheel", wheelEventHandler, options);
-	input.addEventListener("touchend", touchEventHandler, options);
 	input.addEventListener("keydown", keyboardEventHandler, options);
 	input.addEventListener("keyup", keyboardEventHandler, options);
+	input.addEventListener("click", preventDefault, options);
+	input.addEventListener("contextmenu", preventDefault, options);
 
 	////////////////////////////
 	// Main loop / update
@@ -333,7 +320,7 @@ async function tomcatUrl(url) {
 		gui("Attempting to reconnect...");
 		socket.connect();
 		await new Promise(resolve => socket.on("connected", resolve));
-		socket.emit("new_session", { quality, width, height, useTor });
+		socket.emit("new_session", { width, height, useTor });
 		await new Promise(resolve => socket.on("session_id", resolve));
 		socket.emit("navigate", addr);
 		gui(); // clear
@@ -343,10 +330,8 @@ async function tomcatUrl(url) {
 	socket.on("connect", reconnect);
 	socket.on("force_reconnect", reconnect);
 
-	const timer = setInterval(() => socket.emit("sync"), frameRate);
 	_$stop = () => {
-		clearInterval(timer);
-		socket.disconnect();
+		socket.disconnect(true);
 		_$stop = null;
 	};
 
@@ -355,6 +340,7 @@ async function tomcatUrl(url) {
 
 document.getElementById("home").onclick = () => {
 	if (_$stop != null) _$stop();
+	frame.removeAttribute("src");
 	tomcatScreen.style.display = "none";
 	homeScreen.style.display = "block";
 };
@@ -364,8 +350,6 @@ homeScreen.style.display = "block";
 
 let mode = storage.getItem("mode", "tomcat");
 let server = storage.getItem("server", location.origin);
-let quality = storage.getItem("quality", 50);
-let frameRate = storage.getItem("frameRate", 100);
 let dimension = storage.getItem("dimension", "1280x720");
 let useTor = storage.getItem("useTor", false);
 let bareServer = storage.getItem("bareServer", "https://bare.wsug.gq/bare/");
@@ -382,8 +366,6 @@ const menuPlaceholder = document.getElementById("menu-placeholder");
 const serverMenu = document.getElementById("server");
 const bareMenu = document.getElementById("bare");
 const serverAddress = document.getElementById("server-address");
-const qualitySelect = document.getElementById("quality");
-const frameRateSelect = document.getElementById("frame-rate");
 const dimensionSelect = document.getElementById("dimension");
 const useTorCheckbox = document.getElementById("use-tor");
 const bareServerAddress = document.getElementById("bare-server");
@@ -423,8 +405,6 @@ const shortcuts = storage.getItem("shortcuts", [
 
 // menu init
 serverAddress.value = server;
-qualitySelect.value = quality;
-frameRateSelect.value = frameRate;
 dimensionSelect.value = dimension;
 useTorCheckbox.checked = useTor;
 bareServerAddress.value = bareServer;
@@ -628,8 +608,6 @@ for (let radio of document.getElementsByName("working-mode")) {
 	};
 }
 serverAddress.onblur = () => storage.server = server = serverAddress.value;
-qualitySelect.onchange = () => storage.quality = quality = qualitySelect.value;
-frameRateSelect.onchange = () => storage.frameRate = frameRate = frameRateSelect.value;
 dimensionSelect.onchange = () => storage.dimension = dimension = dimensionSelect.value;
 useTorCheckbox.onchange = () => storage.useTor = useTor = useTorCheckbox.checked;
 bareServerAddress.onblur = () => storage.bareServer = bareServer = bareServerAddress.value;
