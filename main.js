@@ -14,6 +14,30 @@ Array.prototype.remove = function(element) {
 	}
 };
 
+// polyfill
+const _timers = [];
+window.setImmediate = (cb) => {
+	let killed = false;
+	function loop() {
+		if (killed) return;
+		cb.apply(void 0, []);
+		requestAnimationFrame(loop);
+	}
+	loop();
+	const id = _timers.length;
+	_timers[id] = { kill: () => killed = true };
+	return id;
+};
+window.clearImmediate = (id) => {
+	const timer = _timers[id];
+	if (timer != null) {
+		timer.kill();
+		delete _timers[id];
+		return true;
+	}
+	return false;
+};
+
 const backgroundScreen = document.getElementById("background-screen");
 const homeScreen = document.getElementById("home-screen");
 const tomcatScreen = document.getElementById("tomcat-screen");
@@ -330,7 +354,9 @@ async function tomcatUrl(url) {
 	socket.on("connect", reconnect);
 	socket.on("force_reconnect", reconnect);
 
+	const timer = setImmediate(() => socket.emit("sync"), 100);
 	_$stop = () => {
+		clearImmediate(timer);
 		socket.disconnect(true);
 		_$stop = null;
 	};
